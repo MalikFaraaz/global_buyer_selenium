@@ -1,0 +1,1187 @@
+{% extends "base.html" %}
+
+{% block extra_css %}
+<style>
+    .generate-header {
+        margin-bottom: 25px;
+    }
+
+    .generate-header h1 {
+        color: var(--dark-blue);
+        font-size: 1.8rem;
+    }
+    
+    .generate-container {
+        display: flex;
+        gap: 30px;
+        align-items: flex-start;
+    }
+    
+    .form-panel, .status-panel {
+        background: var(--white);
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+        padding: 25px;
+        flex: 1;
+        border: 1px solid var(--border-color);
+    }
+    
+    .status-panel {
+        display: flex;
+        flex-direction: column;
+        min-height: 520px;
+    }
+
+    .form-group {
+        margin-bottom: 18px;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 7px;
+        font-weight: 600;
+        font-size: 0.88rem;
+        color: var(--dark-blue);
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 10px 14px;
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        font-size: 0.95rem;
+        transition: all 0.2s;
+        background-color: #fdfdfd;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: var(--accent-blue);
+        background-color: #ffffff;
+        box-shadow: 0 0 0 3px rgba(42, 122, 204, 0.1);
+    }
+
+    /* Combobox Styles */
+    .combobox-wrapper {
+        position: relative;
+        width: 100%;
+    }
+
+    .combobox-input-container {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+    .combobox-input-container input {
+        padding-right: 30px;
+    }
+
+    .combobox-clear-btn {
+        position: absolute;
+        right: 8px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: #e2e8f0;
+        border: none;
+        color: #64748b;
+        font-size: 0.75rem;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        line-height: 1;
+        transition: background 0.15s;
+    }
+
+    .combobox-clear-btn:hover {
+        background: #cbd5e1;
+        color: #1e293b;
+    }
+
+    .combobox-dropdown {
+        position: absolute;
+        top: calc(100% + 4px);
+        left: 0;
+        right: 0;
+        background: #ffffff;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+        max-height: 220px;
+        overflow-y: auto;
+        z-index: 1000;
+        display: none;
+    }
+
+    .combobox-item {
+        padding: 9px 12px;
+        cursor: pointer;
+        font-size: 0.88rem;
+        color: #1e293b;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #f1f5f9;
+        transition: background 0.12s;
+    }
+
+    .combobox-item:last-child {
+        border-bottom: none;
+    }
+
+    .combobox-item:hover, .combobox-item.active {
+        background: #eff6ff;
+        color: var(--primary-blue);
+    }
+
+    .combobox-item .item-sub {
+        font-size: 0.76rem;
+        color: #94a3b8;
+    }
+
+    .combobox-custom-item {
+        background: #f0fdf4 !important;
+        color: #15803d !important;
+        font-weight: 600;
+        border-top: 1px dashed #86efac;
+    }
+
+    .combobox-custom-item:hover {
+        background: #dcfce7 !important;
+    }
+
+    .combobox-empty {
+        padding: 10px 12px;
+        color: #94a3b8;
+        font-size: 0.84rem;
+        text-align: center;
+    }
+
+    /* Platform Checkbox Pills */
+    .platforms-container {
+        background: #f8fafc;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 12px;
+        margin-top: 5px;
+    }
+
+    .platforms-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+
+    .platform-actions button {
+        background: none;
+        border: none;
+        color: var(--primary-blue);
+        font-size: 0.8rem;
+        font-weight: 600;
+        cursor: pointer;
+        padding: 0 4px;
+        text-decoration: underline;
+    }
+
+    .platforms-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+    }
+
+    .platform-checkbox-label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.86rem;
+        font-weight: 500;
+        cursor: pointer;
+        padding: 6px 10px;
+        border-radius: 6px;
+        background: var(--white);
+        border: 1px solid #e2e8f0;
+        transition: all 0.15s;
+    }
+
+    .platform-checkbox-label:hover {
+        border-color: var(--accent-blue);
+        background: #f0f7ff;
+    }
+
+    .platform-checkbox-label input[type="checkbox"] {
+        cursor: pointer;
+        accent-color: var(--primary-blue);
+    }
+
+    /* Strict Toggle */
+    .toggle-group {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: #f0fdf4;
+        border: 1px solid #bbf7d0;
+        padding: 10px 14px;
+        border-radius: 8px;
+        margin-bottom: 18px;
+    }
+
+    .toggle-label {
+        font-size: 0.88rem;
+        font-weight: 600;
+        color: #166534;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .toggle-sub {
+        font-size: 0.75rem;
+        font-weight: 400;
+        color: #15803d;
+    }
+
+    /* Switch */
+    .switch {
+        position: relative;
+        display: inline-block;
+        width: 44px;
+        height: 24px;
+    }
+
+    .switch input { opacity: 0; width: 0; height: 0; }
+
+    .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background-color: #cbd5e1;
+        transition: .3s;
+        border-radius: 24px;
+    }
+
+    .slider:before {
+        position: absolute;
+        content: "";
+        height: 18px;
+        width: 18px;
+        left: 3px;
+        bottom: 3px;
+        background-color: white;
+        transition: .3s;
+        border-radius: 50%;
+    }
+
+    input:checked + .slider {
+        background-color: var(--success-green);
+    }
+
+    input:checked + .slider:before {
+        transform: translateX(20px);
+    }
+
+    .log-window {
+        flex: 1;
+        background: #181c24;
+        color: #4ade80;
+        font-family: 'Consolas', 'Courier New', monospace;
+        font-size: 0.82rem;
+        padding: 15px;
+        border-radius: 8px;
+        overflow-y: auto;
+        height: 320px;
+        margin-top: 15px;
+        line-height: 1.6;
+        border: 1px solid #2d3748;
+    }
+
+    .progress-bar-container {
+        width: 100%;
+        background-color: #e2e8f0;
+        border-radius: 8px;
+        margin-top: 15px;
+        overflow: hidden;
+        height: 14px;
+    }
+
+    .progress-bar {
+        height: 100%;
+        background: linear-gradient(90deg, #10b981, #059669);
+        width: 0%;
+        transition: width 0.4s ease;
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 0.82rem;
+        font-weight: 600;
+    }
+    .status-idle { background: #f1f5f9; color: #475569; }
+    .status-starting { background: #e0e7ff; color: #3730a3; animation: pulse 1.2s infinite; }
+    .status-running { background: #dbeafe; color: #1e40af; animation: pulse 1.5s infinite; }
+    .status-stopping { background: #ffedd5; color: #c2410c; animation: pulse 1s infinite; }
+    .status-stopped { background: #fef3c7; color: #b45309; }
+    .status-completed { background: #dcfce7; color: #166534; }
+    .status-error { background: #fee2e2; color: #991b1b; }
+
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.6; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="generate-header">
+    <h1>Multi-Platform Lead Generator</h1>
+    <p style="color: var(--text-gray); margin-top:5px;">Target specific countries, states, and CMS platforms with strict geo-fencing.</p>
+</div>
+
+<div class="generate-container">
+    <div class="form-panel">
+        <h3 style="margin-bottom: 18px; color: var(--dark-blue); display: flex; align-items: center; gap: 8px;">
+            <span>🎯 Search & Filter Parameters</span>
+        </h3>
+        <form id="leadForm">
+            <!-- Keyword -->
+            <div class="form-group">
+                <label for="keyword">Niche / Search Keyword</label>
+                <input type="text" name="keyword" id="keyword" class="form-control" placeholder="e.g. streetwear, custom hats, activewear" required>
+            </div>
+
+            <!-- Country and State Comboboxes -->
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="countryInput">Country <span style="font-size:0.75rem; color:var(--text-gray); font-weight:normal;">(Search or type custom)</span></label>
+                    <div class="combobox-wrapper" id="countryCombobox">
+                        <div class="combobox-input-container">
+                            <input type="text" name="country" id="countryInput" class="form-control" placeholder="Search or type country (e.g. USA, UK, Pakistan...)" value="United States" required autocomplete="off">
+                            <button type="button" class="combobox-clear-btn" id="countryClearBtn" title="Clear input">✕</button>
+                        </div>
+                        <div class="combobox-dropdown" id="countryDropdown">
+                            <!-- Populated dynamically by JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="stateInput">State / Province <span style="font-size:0.75rem; color:var(--text-gray); font-weight:normal;">(Search or type custom)</span></label>
+                    <div class="combobox-wrapper" id="stateCombobox">
+                        <div class="combobox-input-container">
+                            <input type="text" name="state" id="stateInput" class="form-control" placeholder="Search or type state/province/region..." value="" autocomplete="off">
+                            <button type="button" class="combobox-clear-btn" id="stateClearBtn" title="Clear input">✕</button>
+                        </div>
+                        <div class="combobox-dropdown" id="stateDropdown">
+                            <!-- Populated dynamically by JS -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Strict State Geo-Fencing -->
+            <div class="toggle-group">
+                <div class="toggle-label">
+                    <span>Strict State Geo-Fencing</span>
+                    <span class="toggle-sub">Strictly confine leads to the selected State/Region</span>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" name="strict_state" id="strict_state" value="1" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+
+            <!-- Platform Multi-Selection -->
+            <div class="form-group">
+                <label>Target Platforms (Multi-Select)</label>
+                <div class="platforms-container">
+                    <div class="platforms-header">
+                        <span style="font-size: 0.8rem; color: var(--text-gray);">Select one or more platforms:</span>
+                        <div class="platform-actions">
+                            <button type="button" onclick="selectAllPlatforms(true)">Select All</button> |
+                            <button type="button" onclick="selectAllPlatforms(false)">Deselect All</button>
+                        </div>
+                    </div>
+                    <div class="platforms-grid">
+                        <label class="platform-checkbox-label">
+                            <input type="checkbox" name="platforms" value="Shopify" checked>
+                            <span>🟢 Shopify</span>
+                        </label>
+                        <label class="platform-checkbox-label">
+                            <input type="checkbox" name="platforms" value="WordPress" checked>
+                            <span>🔵 WordPress / WooCommerce</span>
+                        </label>
+                        <label class="platform-checkbox-label">
+                            <input type="checkbox" name="platforms" value="Wix" checked>
+                            <span>🟣 Wix</span>
+                        </label>
+                        <label class="platform-checkbox-label">
+                            <input type="checkbox" name="platforms" value="Squarespace" checked>
+                            <span>🔴 Squarespace</span>
+                        </label>
+                        <label class="platform-checkbox-label">
+                            <input type="checkbox" name="platforms" value="BigCommerce" checked>
+                            <span>🟠 BigCommerce</span>
+                        </label>
+                        <label class="platform-checkbox-label">
+                            <input type="checkbox" name="platforms" value="Custom" checked>
+                            <span>⚪ Custom / Independent</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Max Leads -->
+            <div class="form-group">
+                <label for="max_leads">Max Leads to Collect</label>
+                <input type="number" name="max_leads" id="max_leads" class="form-control" value="50" min="1" max="1000" required>
+            </div>
+
+            <!-- Live Browser Window Toggle -->
+            <div class="form-group" style="background: #f8fafc; padding: 12px 14px; border-radius: 8px; border: 1px solid #e2e8f0; margin-top: 10px; margin-bottom: 12px;">
+                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; margin: 0; font-weight: 600; text-transform: none; font-size: 0.88rem; color: #1e293b;">
+                    <input type="checkbox" name="show_browser" id="show_browser" value="1" checked style="width: 20px; height: 20px; accent-color: #2563eb; cursor: pointer;">
+                    <span style="font-size: 0.92rem; color: #0f172a;">🖥️ <strong>Live Browser Window (Force Visible on Screen)</strong></span>
+                </label>
+                <div style="font-size: 0.8rem; color: #166534; font-weight: 600; margin-top: 5px; margin-left: 30px;">
+                    ✅ Checked = Chrome window will popup and stay in foreground on your desktop.
+                </div>
+            </div>
+
+            <!-- Concurrency & Speed Workers -->
+            <div class="form-group" style="background: linear-gradient(135deg, #f0fdf4 0%, #eff6ff 100%); padding: 12px 14px; border-radius: 8px; border: 1.5px solid #bfdbfe; margin-bottom: 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                    <label for="num_workers" style="font-weight: 700; color: #1e3a8a; margin: 0; font-size: 0.88rem;">
+                        ⚡ Parallel Scraper Workers (Turbo Speed)
+                    </label>
+                    <span style="font-size: 0.72rem; background: #2563eb; color: #fff; padding: 2px 8px; border-radius: 12px; font-weight: 600;">P2 Parallel</span>
+                </div>
+                <select name="num_workers" id="num_workers" class="form-control" style="font-weight: 600; background: #ffffff;">
+                    <option value="1">1 Worker (Sequential / Gentle)</option>
+                    <option value="2" selected>2 Workers (2x Turbo Speed)</option>
+                    <option value="3">3 Workers (3x Balanced Speed)</option>
+                    <option value="4">4 Workers (4x High-Speed Concurrency)</option>
+                    <option value="5">5 Workers (5x Maximum Concurrency)</option>
+                </select>
+                <p style="font-size: 0.76rem; color: #475569; margin-top: 6px; margin-bottom: 0; line-height: 1.3;">
+                    Launches parallel browser workers simultaneously to analyze stores, extract verified leads, and fill forms in a fraction of the time.
+                </p>
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-top: 15px;">
+                <button type="submit" class="btn-primary" id="startBtn" style="flex: 1; padding: 13px; font-size: 1rem; border-radius: 8px; font-weight: 700;">
+                    🚀 Start Targeted Scraping
+                </button>
+                <button type="button" id="stopBtn" style="display: none; flex: 1; padding: 13px; font-size: 1rem; border-radius: 8px; background: #dc2626; color: white; border: none; font-weight: 700; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 6px -1px rgba(220, 38, 38, 0.3);">
+                    🛑 Stop Scraping
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div class="status-panel">
+        <h3 style="color: var(--dark-blue); display: flex; justify-content: space-between; align-items: center;">
+            <span>📡 Live Scraping Console</span>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <button type="button" id="stopBtnHeader" style="display: none; padding: 4px 12px; font-size: 0.8rem; border-radius: 6px; background: #dc2626; color: white; border: none; font-weight: 700; cursor: pointer;">
+                    🛑 Stop
+                </button>
+                <span class="status-badge status-idle" id="statusBadge">Idle</span>
+            </div>
+        </h3>
+        
+        <div style="margin-top: 15px; display: flex; justify-content: space-between; font-size: 0.9rem;">
+            <div><strong>Action:</strong> <span id="statusMessage" style="color: var(--text-dark);">Waiting to start...</span></div>
+            <div><strong>Progress:</strong> <span id="progressText" style="font-weight: 700; color: var(--primary-blue);">0 / 0</span></div>
+        </div>
+
+        <div class="progress-bar-container">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+
+        <div class="log-window" id="logWindow">
+[System] Ready. Configure search parameters and click 'Start Targeted Scraping'.
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Comprehensive State / Province data dictionary
+    const statesData = {
+        "USA": [
+            { code: "ALL", name: "All 50 States (National)" },
+            { code: "California", name: "California (CA)" },
+            { code: "Texas", name: "Texas (TX)" },
+            { code: "Florida", name: "Florida (FL)" },
+            { code: "New York", name: "New York (NY)" },
+            { code: "Illinois", name: "Illinois (IL)" },
+            { code: "Pennsylvania", name: "Pennsylvania (PA)" },
+            { code: "Ohio", name: "Ohio (OH)" },
+            { code: "Georgia", name: "Georgia (GA)" },
+            { code: "North Carolina", name: "North Carolina (NC)" },
+            { code: "Michigan", name: "Michigan (MI)" },
+            { code: "New Jersey", name: "New Jersey (NJ)" },
+            { code: "Virginia", name: "Virginia (VA)" },
+            { code: "Washington", name: "Washington (WA)" },
+            { code: "Arizona", name: "Arizona (AZ)" },
+            { code: "Massachusetts", name: "Massachusetts (MA)" },
+            { code: "Tennessee", name: "Tennessee (TN)" },
+            { code: "Indiana", name: "Indiana (IN)" },
+            { code: "Missouri", name: "Missouri (MO)" },
+            { code: "Maryland", name: "Maryland (MD)" },
+            { code: "Wisconsin", name: "Wisconsin (WI)" },
+            { code: "Colorado", name: "Colorado (CO)" },
+            { code: "Minnesota", name: "Minnesota (MN)" },
+            { code: "South Carolina", name: "South Carolina (SC)" },
+            { code: "Alabama", name: "Alabama (AL)" },
+            { code: "Louisiana", name: "Louisiana (LA)" },
+            { code: "Kentucky", name: "Kentucky (KY)" },
+            { code: "Oregon", name: "Oregon (OR)" },
+            { code: "Oklahoma", name: "Oklahoma (OK)" },
+            { code: "Connecticut", name: "Connecticut (CT)" },
+            { code: "Utah", name: "Utah (UT)" },
+            { code: "Iowa", name: "Iowa (IA)" },
+            { code: "Nevada", name: "Nevada (NV)" },
+            { code: "Arkansas", name: "Arkansas (AR)" },
+            { code: "Mississippi", name: "Mississippi (MS)" },
+            { code: "Kansas", name: "Kansas (KS)" },
+            { code: "New Mexico", name: "New Mexico (NM)" },
+            { code: "Nebraska", name: "Nebraska (NE)" },
+            { code: "Idaho", name: "Idaho (ID)" },
+            { code: "Hawaii", name: "Hawaii (HI)" },
+            { code: "New Hampshire", name: "New Hampshire (NH)" },
+            { code: "Maine", name: "Maine (ME)" },
+            { code: "Montana", name: "Montana (MT)" },
+            { code: "Rhode Island", name: "Rhode Island (RI)" },
+            { code: "Delaware", name: "Delaware (DE)" },
+            { code: "South Dakota", name: "South Dakota (SD)" },
+            { code: "North Dakota", name: "North Dakota (ND)" },
+            { code: "Alaska", name: "Alaska (AK)" },
+            { code: "Vermont", name: "Vermont (VT)" },
+            { code: "Wyoming", name: "Wyoming (WY)" },
+            { code: "West Virginia", name: "West Virginia (WV)" }
+        ],
+        "Canada": [
+            { code: "ALL", name: "All Provinces" },
+            { code: "Ontario", name: "Ontario (ON)" },
+            { code: "Quebec", name: "Quebec (QC)" },
+            { code: "British Columbia", name: "British Columbia (BC)" },
+            { code: "Alberta", name: "Alberta (AB)" },
+            { code: "Manitoba", name: "Manitoba (MB)" },
+            { code: "Saskatchewan", name: "Saskatchewan (SK)" },
+            { code: "Nova Scotia", name: "Nova Scotia (NS)" },
+            { code: "New Brunswick", name: "New Brunswick (NB)" },
+            { code: "Newfoundland and Labrador", name: "Newfoundland (NL)" },
+            { code: "Prince Edward Island", name: "Prince Edward Island (PE)" }
+        ],
+        "United Kingdom": [
+            { code: "ALL", name: "All Regions (UK)" },
+            { code: "London", name: "Greater London" },
+            { code: "England", name: "England" },
+            { code: "Scotland", name: "Scotland" },
+            { code: "Wales", name: "Wales" },
+            { code: "Northern Ireland", name: "Northern Ireland" },
+            { code: "Manchester", name: "Greater Manchester" },
+            { code: "Birmingham", name: "West Midlands / Birmingham" },
+            { code: "Leeds", name: "West Yorkshire / Leeds" }
+        ],
+        "Australia": [
+            { code: "ALL", name: "All States (Australia)" },
+            { code: "New South Wales", name: "New South Wales (NSW)" },
+            { code: "Victoria", name: "Victoria (VIC)" },
+            { code: "Queensland", name: "Queensland (QLD)" },
+            { code: "Western Australia", name: "Western Australia (WA)" },
+            { code: "South Australia", name: "South Australia (SA)" },
+            { code: "Tasmania", name: "Tasmania (TAS)" },
+            { code: "Australian Capital Territory", name: "ACT / Canberra" }
+        ],
+        "Germany": [
+            { code: "ALL", name: "All Federal States (Germany)" },
+            { code: "Bavaria", name: "Bavaria (Bayern)" },
+            { code: "North Rhine-Westphalia", name: "North Rhine-Westphalia (NRW)" },
+            { code: "Baden-Wurttemberg", name: "Baden-Württemberg" },
+            { code: "Berlin", name: "Berlin" },
+            { code: "Hesse", name: "Hesse (Hessen)" },
+            { code: "Saxony", name: "Saxony (Sachsen)" },
+            { code: "Hamburg", name: "Hamburg" }
+        ],
+        "India": [
+            { code: "ALL", name: "All States (India)" },
+            { code: "Maharashtra", name: "Maharashtra (Mumbai, Pune)" },
+            { code: "Delhi", name: "Delhi NCR" },
+            { code: "Karnataka", name: "Karnataka (Bangalore)" },
+            { code: "Tamil Nadu", name: "Tamil Nadu (Chennai)" },
+            { code: "Gujarat", name: "Gujarat (Ahmedabad, Surat)" },
+            { code: "Telangana", name: "Telangana (Hyderabad)" },
+            { code: "Uttar Pradesh", name: "Uttar Pradesh" },
+            { code: "Punjab", name: "Punjab" },
+            { code: "West Bengal", name: "West Bengal (Kolkata)" },
+            { code: "Rajasthan", name: "Rajasthan (Jaipur)" }
+        ],
+        "Pakistan": [
+            { code: "ALL", name: "All Provinces (Pakistan)" },
+            { code: "Punjab", name: "Punjab (Lahore, Faisalabad, Rawalpindi)" },
+            { code: "Sindh", name: "Sindh (Karachi, Hyderabad)" },
+            { code: "Khyber Pakhtunkhwa", name: "Khyber Pakhtunkhwa (Peshawar)" },
+            { code: "Islamabad", name: "Islamabad Capital Territory" },
+            { code: "Balochistan", name: "Balochistan (Quetta)" },
+            { code: "Azad Kashmir", name: "Azad Kashmir" }
+        ],
+        "UAE": [
+            { code: "ALL", name: "All Emirates (UAE)" },
+            { code: "Dubai", name: "Dubai" },
+            { code: "Abu Dhabi", name: "Abu Dhabi" },
+            { code: "Sharjah", name: "Sharjah" },
+            { code: "Ajman", name: "Ajman" },
+            { code: "Ras Al Khaimah", name: "Ras Al Khaimah" }
+        ],
+        "France": [
+            { code: "ALL", name: "All Regions (France)" },
+            { code: "Ile-de-France", name: "Île-de-France (Paris)" },
+            { code: "Auvergne-Rhone-Alpes", name: "Auvergne-Rhône-Alpes (Lyon)" },
+            { code: "Provence-Alpes-Cote d'Azur", name: "Provence-Alpes-Côte d'Azur (Marseille)" },
+            { code: "Occitanie", name: "Occitanie (Toulouse)" },
+            { code: "Nouvelle-Aquitaine", name: "Nouvelle-Aquitaine (Bordeaux)" }
+        ],
+        "Spain": [
+            { code: "ALL", name: "All Autonomous Communities (Spain)" },
+            { code: "Madrid", name: "Community of Madrid" },
+            { code: "Catalonia", name: "Catalonia (Barcelona)" },
+            { code: "Andalusia", name: "Andalusia (Seville, Malaga)" },
+            { code: "Valencia", name: "Valencian Community" }
+        ],
+        "Italy": [
+            { code: "ALL", name: "All Regions (Italy)" },
+            { code: "Lombardy", name: "Lombardy (Milan)" },
+            { code: "Lazio", name: "Lazio (Rome)" },
+            { code: "Veneto", name: "Veneto (Venice)" },
+            { code: "Piedmont", name: "Piedmont (Turin)" },
+            { code: "Tuscany", name: "Tuscany (Florence)" }
+        ],
+        "Netherlands": [
+            { code: "ALL", name: "All Provinces (Netherlands)" },
+            { code: "North Holland", name: "North Holland (Amsterdam)" },
+            { code: "South Holland", name: "South Holland (Rotterdam, The Hague)" },
+            { code: "Utrecht", name: "Utrecht" },
+            { code: "North Brabant", name: "North Brabant (Eindhoven)" }
+        ],
+        "Saudi Arabia": [
+            { code: "ALL", name: "All Provinces (Saudi Arabia)" },
+            { code: "Riyadh", name: "Riyadh Region" },
+            { code: "Makkah", name: "Makkah Province (Jeddah, Mecca)" },
+            { code: "Eastern Province", name: "Eastern Province (Dammam, Khobar)" },
+            { code: "Madinah", name: "Madinah Province" }
+        ],
+        "Singapore": [
+            { code: "ALL", name: "Nationwide (Singapore)" },
+            { code: "Central", name: "Central Region" },
+            { code: "East", name: "East Region" },
+            { code: "West", name: "West Region" }
+        ],
+        "New Zealand": [
+            { code: "ALL", name: "All Regions (New Zealand)" },
+            { code: "Auckland", name: "Auckland Region" },
+            { code: "Wellington", name: "Wellington Region" },
+            { code: "Canterbury", name: "Canterbury (Christchurch)" }
+        ],
+        "Ireland": [
+            { code: "ALL", name: "All Counties (Ireland)" },
+            { code: "Dublin", name: "County Dublin" },
+            { code: "Cork", name: "County Cork" },
+            { code: "Galway", name: "County Galway" }
+        ],
+        "Brazil": [
+            { code: "ALL", name: "All States (Brazil)" },
+            { code: "Sao Paulo", name: "São Paulo (SP)" },
+            { code: "Rio de Janeiro", name: "Rio de Janeiro (RJ)" },
+            { code: "Minas Gerais", name: "Minas Gerais (MG)" },
+            { code: "Parana", name: "Paraná (PR)" }
+        ],
+        "Mexico": [
+            { code: "ALL", name: "All States (Mexico)" },
+            { code: "Mexico City", name: "Mexico City (CDMX)" },
+            { code: "Jalisco", name: "Jalisco (Guadalajara)" },
+            { code: "Nuevo Leon", name: "Nuevo León (Monterrey)" },
+            { code: "State of Mexico", name: "State of Mexico" }
+        ],
+        "Turkey": [
+            { code: "ALL", name: "All Provinces (Turkey)" },
+            { code: "Istanbul", name: "Istanbul" },
+            { code: "Ankara", name: "Ankara" },
+            { code: "Izmir", name: "Izmir" },
+            { code: "Antalya", name: "Antalya" },
+            { code: "Bursa", name: "Bursa" }
+        ],
+        "South Africa": [
+            { code: "ALL", name: "All Provinces (South Africa)" },
+            { code: "Gauteng", name: "Gauteng (Johannesburg, Pretoria)" },
+            { code: "Western Cape", name: "Western Cape (Cape Town)" },
+            { code: "KwaZulu-Natal", name: "KwaZulu-Natal (Durban)" }
+        ],
+        "Japan": [
+            { code: "ALL", name: "All Prefectures (Japan)" },
+            { code: "Tokyo", name: "Tokyo" },
+            { code: "Osaka", name: "Osaka" },
+            { code: "Kanagawa", name: "Kanagawa (Yokohama)" },
+            { code: "Aichi", name: "Aichi (Nagoya)" },
+            { code: "Kyoto", name: "Kyoto" },
+            { code: "Hokkaido", name: "Hokkaido" }
+        ]
+    };
+
+    const countriesList = [
+        { code: "USA", name: "United States (USA)", flag: "🇺🇸" },
+        { code: "Canada", name: "Canada", flag: "🇨🇦" },
+        { code: "United Kingdom", name: "United Kingdom (UK)", flag: "🇬🇧" },
+        { code: "Australia", name: "Australia", flag: "🇦🇺" },
+        { code: "Germany", name: "Germany", flag: "🇩🇪" },
+        { code: "France", name: "France", flag: "🇫🇷" },
+        { code: "Italy", name: "Italy", flag: "🇮🇹" },
+        { code: "Spain", name: "Spain", flag: "🇪🇸" },
+        { code: "Netherlands", name: "Netherlands", flag: "🇳🇱" },
+        { code: "India", name: "India", flag: "🇮🇳" },
+        { code: "Pakistan", name: "Pakistan", flag: "🇵🇰" },
+        { code: "UAE", name: "United Arab Emirates (UAE)", flag: "🇦🇪" },
+        { code: "Saudi Arabia", name: "Saudi Arabia", flag: "🇸🇦" },
+        { code: "Singapore", name: "Singapore", flag: "🇸🇬" },
+        { code: "New Zealand", name: "New Zealand", flag: "🇳🇿" },
+        { code: "Ireland", name: "Ireland", flag: "🇮🇪" },
+        { code: "Sweden", name: "Sweden", flag: "🇸🇪" },
+        { code: "Norway", name: "Norway", flag: "🇳🇴" },
+        { code: "Denmark", name: "Denmark", flag: "🇩🇰" },
+        { code: "Switzerland", name: "Switzerland", flag: "🇨🇭" },
+        { code: "Brazil", name: "Brazil", flag: "🇧🇷" },
+        { code: "Mexico", name: "Mexico", flag: "🇲🇽" },
+        { code: "South Africa", name: "South Africa", flag: "🇿🇦" },
+        { code: "Japan", name: "Japan", flag: "🇯🇵" },
+        { code: "Turkey", name: "Turkey", flag: "🇹🇷" }
+    ];
+
+    function escapeHtml(text) {
+        if (!text) return '';
+        return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    }
+
+    // Generic Combobox Search & Autocomplete
+    function setupCombobox({ inputId, dropdownId, clearBtnId, getItems, onSelect }) {
+        const input = document.getElementById(inputId);
+        const dropdown = document.getElementById(dropdownId);
+        const clearBtn = document.getElementById(clearBtnId);
+        let activeIdx = -1;
+
+        function updateClearBtn() {
+            if (clearBtn) {
+                clearBtn.style.display = input.value ? 'flex' : 'none';
+            }
+        }
+
+        function renderDropdown(query = '') {
+            const rawItems = getItems(query);
+            const q = query.trim().toLowerCase();
+            dropdown.innerHTML = '';
+            activeIdx = -1;
+
+            let exactMatchFound = false;
+            let matchCount = 0;
+
+            rawItems.forEach((item, idx) => {
+                const label = item.name || item.code;
+                const value = item.code === "ALL" ? "" : (item.code || item.name);
+                const sub = item.flag || (item.code && item.code !== item.name && item.code !== "ALL" ? item.code : "");
+
+                if (!q || label.toLowerCase().includes(q) || (sub && sub.toLowerCase().includes(q))) {
+                    matchCount++;
+                    if (label.toLowerCase() === q || (value && value.toLowerCase() === q)) {
+                        exactMatchFound = true;
+                    }
+
+                    const div = document.createElement('div');
+                    div.className = 'combobox-item';
+                    div.dataset.value = value;
+                    div.dataset.label = label;
+                    div.innerHTML = `
+                        <span>${escapeHtml(label)}</span>
+                        ${sub ? `<span class="item-sub">${escapeHtml(sub)}</span>` : ''}
+                    `;
+                    div.addEventListener('mousedown', (e) => {
+                        e.preventDefault();
+                        selectItem(label, value);
+                    });
+                    dropdown.appendChild(div);
+                }
+            });
+
+            // If user typed something custom that isn't an exact match, give them the option to use their custom input explicitly
+            if (q && !exactMatchFound) {
+                const customDiv = document.createElement('div');
+                customDiv.className = 'combobox-item combobox-custom-item';
+                customDiv.dataset.value = query.trim();
+                customDiv.dataset.label = query.trim();
+                customDiv.innerHTML = `
+                    <span>✏️ Use custom: "<strong>${escapeHtml(query.trim())}</strong>"</span>
+                    <span class="item-sub">Custom Entry</span>
+                `;
+                customDiv.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
+                    selectItem(query.trim(), query.trim());
+                });
+                dropdown.appendChild(customDiv);
+            }
+
+            if (dropdown.children.length === 0) {
+                const empty = document.createElement('div');
+                empty.className = 'combobox-empty';
+                empty.textContent = 'No presets found. You can type any custom name directly.';
+                dropdown.appendChild(empty);
+            }
+
+            dropdown.style.display = 'block';
+        }
+
+        function selectItem(label, value) {
+            input.value = label;
+            input.dataset.actualValue = value;
+            dropdown.style.display = 'none';
+            updateClearBtn();
+            if (onSelect) onSelect(label, value);
+        }
+
+        input.addEventListener('focus', () => {
+            renderDropdown(input.value);
+            updateClearBtn();
+        });
+
+        input.addEventListener('input', () => {
+            input.dataset.actualValue = input.value;
+            renderDropdown(input.value);
+            updateClearBtn();
+        });
+
+        input.addEventListener('keydown', (e) => {
+            const items = dropdown.querySelectorAll('.combobox-item');
+            if (!items.length || dropdown.style.display === 'none') {
+                if (e.key === 'ArrowDown') {
+                    renderDropdown(input.value);
+                }
+                return;
+            }
+
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                activeIdx = (activeIdx + 1) % items.length;
+                highlightItem(items);
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                activeIdx = (activeIdx - 1 + items.length) % items.length;
+                highlightItem(items);
+            } else if (e.key === 'Enter') {
+                if (activeIdx >= 0 && items[activeIdx]) {
+                    e.preventDefault();
+                    const chosen = items[activeIdx];
+                    selectItem(chosen.dataset.label, chosen.dataset.value);
+                } else {
+                    dropdown.style.display = 'none';
+                }
+            } else if (e.key === 'Escape') {
+                dropdown.style.display = 'none';
+            }
+        });
+
+        function highlightItem(items) {
+            items.forEach((it, idx) => {
+                if (idx === activeIdx) {
+                    it.classList.add('active');
+                    it.scrollIntoView({ block: 'nearest' });
+                } else {
+                    it.classList.remove('active');
+                }
+            });
+        }
+
+        if (clearBtn) {
+            clearBtn.addEventListener('click', () => {
+                input.value = '';
+                input.dataset.actualValue = '';
+                updateClearBtn();
+                input.focus();
+                renderDropdown('');
+                if (onSelect) onSelect('', '');
+            });
+        }
+
+        document.addEventListener('click', (e) => {
+            if (!input.contains(e.target) && !dropdown.contains(e.target) && (!clearBtn || !clearBtn.contains(e.target))) {
+                dropdown.style.display = 'none';
+            }
+        });
+    }
+
+    // Helper to get normalized Country Key
+    function getCountryKey(countryName) {
+        if (!countryName) return 'USA';
+        const lower = countryName.toLowerCase();
+        if (lower.includes('united states') || lower === 'usa' || lower === 'us') return 'USA';
+        if (lower.includes('canada')) return 'Canada';
+        if (lower.includes('united kingdom') || lower === 'uk' || lower.includes('britain') || lower.includes('england')) return 'United Kingdom';
+        if (lower.includes('australia')) return 'Australia';
+        if (lower.includes('germany') || lower.includes('deutschland')) return 'Germany';
+        if (lower.includes('france')) return 'France';
+        if (lower.includes('italy') || lower.includes('italia')) return 'Italy';
+        if (lower.includes('spain') || lower.includes('espana')) return 'Spain';
+        if (lower.includes('netherlands') || lower.includes('holland')) return 'Netherlands';
+        if (lower.includes('india')) return 'India';
+        if (lower.includes('pakistan')) return 'Pakistan';
+        if (lower.includes('uae') || lower.includes('emirates') || lower.includes('dubai')) return 'UAE';
+        if (lower.includes('saudi')) return 'Saudi Arabia';
+        if (lower.includes('singapore')) return 'Singapore';
+        if (lower.includes('zealand')) return 'New Zealand';
+        if (lower.includes('ireland')) return 'Ireland';
+        if (lower.includes('sweden')) return 'Sweden';
+        if (lower.includes('norway')) return 'Norway';
+        if (lower.includes('denmark')) return 'Denmark';
+        if (lower.includes('switzerland')) return 'Switzerland';
+        if (lower.includes('brazil')) return 'Brazil';
+        if (lower.includes('mexico')) return 'Mexico';
+        if (lower.includes('south africa')) return 'South Africa';
+        if (lower.includes('japan')) return 'Japan';
+        if (lower.includes('turkey') || lower.includes('turkiye')) return 'Turkey';
+        return countryName;
+    }
+
+    // Initialize Country Combobox
+    setupCombobox({
+        inputId: 'countryInput',
+        dropdownId: 'countryDropdown',
+        clearBtnId: 'countryClearBtn',
+        getItems: () => countriesList,
+        onSelect: (label, value) => {
+            const countryKey = getCountryKey(label || value);
+            // Reset state input to empty or all
+            const stateInput = document.getElementById('stateInput');
+            stateInput.value = '';
+            stateInput.dataset.actualValue = '';
+        }
+    });
+
+    // Initialize State Combobox
+    setupCombobox({
+        inputId: 'stateInput',
+        dropdownId: 'stateDropdown',
+        clearBtnId: 'stateClearBtn',
+        getItems: () => {
+            const countryVal = document.getElementById('countryInput').value;
+            const countryKey = getCountryKey(countryVal);
+            return statesData[countryKey] || [
+                { code: "ALL", name: "All Regions / Nationwide" }
+            ];
+        },
+        onSelect: (label, value) => {
+            // State selected
+        }
+    });
+
+    function selectAllPlatforms(select) {
+        document.querySelectorAll('input[name="platforms"]').forEach(cb => {
+            cb.checked = select;
+        });
+    }
+
+    // Scraper Interaction & Persistent State Controller
+    const form = document.getElementById('leadForm');
+    const startBtn = document.getElementById('startBtn');
+    const stopBtn = document.getElementById('stopBtn');
+    const stopBtnHeader = document.getElementById('stopBtnHeader');
+    const statusBadge = document.getElementById('statusBadge');
+    const statusMessage = document.getElementById('statusMessage');
+    const progressText = document.getElementById('progressText');
+    const progressBar = document.getElementById('progressBar');
+    const logWindow = document.getElementById('logWindow');
+    
+    let pollInterval = null;
+
+    function renderStatus(status) {
+        if (!status) return;
+
+        const st = (status.status || 'idle').toLowerCase();
+        statusBadge.className = "status-badge status-" + st;
+        statusBadge.innerText = st.toUpperCase();
+
+        statusMessage.innerText = status.message || (st === 'running' ? 'Scraping in progress...' : 'Ready to start');
+        progressText.innerText = `${status.progress || 0} / ${status.total || 0}`;
+        
+        let pct = 0;
+        if (status.total > 0) {
+            pct = Math.min(100, Math.round(((status.progress || 0) / status.total) * 100));
+        }
+        progressBar.style.width = pct + '%';
+        
+        if (status.logs && status.logs.length > 0) {
+            logWindow.innerHTML = status.logs.join('<br>');
+            logWindow.scrollTop = logWindow.scrollHeight;
+        }
+
+        // Manage button display & polling based on backend status
+        if (st === 'running' || st === 'starting') {
+            startBtn.style.display = 'none';
+            stopBtn.style.display = 'block';
+            stopBtn.disabled = false;
+            stopBtn.innerText = '🛑 Stop Scraping';
+            if (stopBtnHeader) {
+                stopBtnHeader.style.display = 'inline-block';
+                stopBtnHeader.disabled = false;
+                stopBtnHeader.innerText = '🛑 Stop';
+            }
+            startPolling();
+        } else if (st === 'stopping') {
+            startBtn.style.display = 'none';
+            stopBtn.style.display = 'block';
+            stopBtn.disabled = true;
+            stopBtn.innerText = '⏳ Stopping Active Workers...';
+            if (stopBtnHeader) {
+                stopBtnHeader.style.display = 'inline-block';
+                stopBtnHeader.disabled = true;
+                stopBtnHeader.innerText = '⏳ Stopping...';
+            }
+            startPolling();
+        } else {
+            // idle, completed, stopped, error
+            startBtn.style.display = 'block';
+            startBtn.disabled = false;
+            startBtn.innerText = "🚀 Start Targeted Scraping";
+            stopBtn.style.display = 'none';
+            if (stopBtnHeader) stopBtnHeader.style.display = 'none';
+            stopPolling();
+        }
+    }
+
+    function fetchStatusOnce() {
+        fetch("{{ url_for('api_scraper_status') }}")
+        .then(r => r.json())
+        .then(status => {
+            renderStatus(status);
+        })
+        .catch(err => console.error("Error fetching scraper status:", err));
+    }
+
+    function startPolling() {
+        if (!pollInterval) {
+            pollInterval = setInterval(fetchStatusOnce, 1500);
+        }
+    }
+
+    function stopPolling() {
+        if (pollInterval) {
+            clearInterval(pollInterval);
+            pollInterval = null;
+        }
+    }
+
+    function triggerStop() {
+        if (confirm("Are you sure you want to stop the scraping process? All verified leads collected so far are already preserved in your database.")) {
+            stopBtn.disabled = true;
+            stopBtn.innerText = "⏳ Stopping Scraper...";
+            if (stopBtnHeader) {
+                stopBtnHeader.disabled = true;
+                stopBtnHeader.innerText = "⏳ Stopping...";
+            }
+            statusBadge.className = "status-badge status-stopping";
+            statusBadge.innerText = "STOPPING";
+
+            fetch("{{ url_for('api_stop_scraper') }}", { method: 'POST' })
+            .then(r => r.json())
+            .then(data => {
+                fetchStatusOnce();
+            })
+            .catch(err => {
+                console.error("Stop error:", err);
+                fetchStatusOnce();
+            });
+        }
+    }
+
+    if (stopBtn) stopBtn.addEventListener('click', triggerStop);
+    if (stopBtnHeader) stopBtnHeader.addEventListener('click', triggerStop);
+
+    // Sync immediately when browser tab gains visibility or focus
+    document.addEventListener('visibilitychange', function() {
+        if (!document.hidden) {
+            fetchStatusOnce();
+        }
+    });
+    window.addEventListener('focus', function() {
+        fetchStatusOnce();
+    });
+
+    // Form Submission
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        // Check if at least one platform selected
+        const selectedPlatforms = document.querySelectorAll('input[name="platforms"]:checked');
+        if (selectedPlatforms.length === 0) {
+            alert("Please select at least one platform!");
+            return;
+        }
+        
+        const formData = new FormData(form);
+        
+        const countryEl = document.getElementById('countryInput');
+        const stateEl = document.getElementById('stateInput');
+        let countryVal = (countryEl.dataset.actualValue || countryEl.value || 'USA').trim();
+        let stateVal = (stateEl.dataset.actualValue || stateEl.value || '').trim();
+        formData.set('country', countryVal || 'USA');
+        formData.set('state', stateVal);
+        
+        const showBrowserEl = document.getElementById('show_browser');
+        formData.set('show_browser', (showBrowserEl && showBrowserEl.checked) ? '1' : '0');
+
+        startBtn.disabled = true;
+        startBtn.innerText = "⏳ Initializing Scraper...";
+        statusBadge.className = "status-badge status-starting";
+        statusBadge.innerText = "STARTING";
+        statusMessage.innerText = "Connecting workers and browser...";
+        logWindow.innerHTML = "[System] Initializing targeted scraper...";
+
+        fetch("{{ url_for('api_start_scraper') }}", {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                fetchStatusOnce();
+                startPolling();
+            } else {
+                alert(data.message || "Could not start scraper");
+                fetchStatusOnce();
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            startBtn.disabled = false;
+            startBtn.innerText = "🚀 Start Targeted Scraping";
+            statusBadge.className = "status-badge status-error";
+            statusBadge.innerText = "Error";
+            fetchStatusOnce();
+        });
+    });
+
+    // AUTO-RESTORE ON LOAD: Checks background scraper status immediately
+    document.addEventListener('DOMContentLoaded', fetchStatusOnce);
+    // Immediate fallback execution
+    fetchStatusOnce();
+</script>
+{% endblock %}

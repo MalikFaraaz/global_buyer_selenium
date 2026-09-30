@@ -1,0 +1,31 @@
+Project Overview: Global Buyer Lead Generation & Scoring System
+
+Key Points:
+
+• Purpose: An automated pipeline to scrape, clean, score, and display Shopify e-commerce leads.
+
+• Web Scraper (shopify_leads.py): 
+  - Uses Selenium to find Shopify stores via DuckDuckGo.
+  - Extracts brand name, email, and niche.
+  - Automatically finds contact pages and attempts to fill out contact forms.
+
+• Data Processing & NLP (NLP.py): 
+  - Connects to an Oracle Database to fetch scraped data.
+  - Cleans text, validates emails, and removes duplicates.
+  - Labels buyers as "relevant" based on keywords (e.g., clothing, headwear).
+
+• Machine Learning Scoring (ML.py): 
+  - Trains AI models (Random Forest, Decision Tree, Logistic Regression).
+  - Calculates a Lead Score (0-100) based on features like website length and email validity.
+  - Categorizes leads as High, Medium, or Low quality.
+
+• Dashboard (app.py): 
+  - Built with Flask (Python).
+  - Displays total buyers, lead qualities, and model accuracy from the database.
+  - Allows users to manually trigger new scraping jobs.
+
+• Database: 
+  - Fully integrated with a local Oracle Database to store and manage all lead data.
+
+• Current Stage: 
+  - Fully functional and integrated (End-to-End). All scripts and the dashboard are working together to generate and score leads.

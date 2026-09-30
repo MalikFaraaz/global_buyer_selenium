@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+
+{% block extra_css %}
+<style>
+    .admin-container {
+        background: var(--white);
+        padding: 30px;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    }
+
+    .admin-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 25px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .admin-header h2 {
+        color: var(--dark-blue);
+    }
+
+    .users-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .users-table th, .users-table td {
+        padding: 15px;
+        text-align: left;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .users-table th {
+        background-color: var(--light-blue);
+        color: var(--text-dark);
+        font-weight: 600;
+    }
+
+    .status-badge {
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+
+    .status-active {
+        background-color: #d4edda;
+        color: #155724;
+    }
+
+    .status-blocked {
+        background-color: #f8d7da;
+        color: #721c24;
+    }
+
+    .role-badge {
+        background-color: #e2e3e5;
+        color: #383d41;
+        padding: 3px 8px;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        font-weight: bold;
+    }
+
+    .role-admin {
+        background-color: #cce5ff;
+        color: #004085;
+    }
+
+    .btn-sm {
+        padding: 6px 12px;
+        font-size: 0.85rem;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: 500;
+        transition: 0.2s;
+    }
+
+    .btn-block {
+        background-color: #dc3545;
+        color: white;
+    }
+
+    .btn-block:hover { background-color: #c82333; }
+
+    .btn-unblock {
+        background-color: #28a745;
+        color: white;
+    }
+
+    .btn-unblock:hover { background-color: #218838; }
+
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-container">
+    <div class="admin-header">
+        <h2>User Management</h2>
+        <span>Total Users: {{ users|length }}</span>
+    </div>
+
+    <table class="users-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Username</th>
+                <th>Role</th>
+                <th>Status</th>
+                <th>Joined Date</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for u in users %}
+            <tr>
+                <td>#{{ u[0] }}</td>
+                <td>{{ u[1] }}</td>
+                <td>
+                    <span class="role-badge {% if u[2] == 'admin' %}role-admin{% endif %}">
+                        {{ u[2] }}
+                    </span>
+                </td>
+                <td>
+                    {% if u[3] == 0 %}
+                        <span class="status-badge status-active">Active</span>
+                    {% else %}
+                        <span class="status-badge status-blocked">Blocked</span>
+                    {% endif %}
+                </td>
+                <td>{{ u[4][:10] if u[4] else 'N/A' }}</td>
+                <td>
+                    <div style="display: flex; gap: 5px; align-items: center;">
+                        <a href="{{ url_for('edit_user', user_id=u[0]) }}" class="btn-sm" style="background-color: #ffc107; color: #212529; text-decoration: none;">✏️ Edit</a>
+                        {% if u[0] != current_user.id|int %}
+                            <form action="{{ url_for('toggle_block', user_id=u[0]) }}" method="POST" style="margin: 0;">
+                                {% if u[3] == 0 %}
+                                    <button type="submit" class="btn-sm btn-block" onclick="return confirm('Block this user?');">🚫 Block</button>
+                                {% else %}
+                                    <button type="submit" class="btn-sm btn-unblock">✅ Unblock</button>
+                                {% endif %}
+                            </form>
+                        {% else %}
+                            <span style="color: #999; font-size: 0.85rem; font-style: italic; margin-left: 5px;">(You)</span>
+                        {% endif %}
+                    </div>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="6" style="text-align: center; padding: 30px; color: #777;">No users found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

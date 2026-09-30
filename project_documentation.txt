@@ -1,0 +1,107 @@
+================================================================================
+                    GLOBAL BUYER SELENIUM - PROJECT DOCUMENTATION
+================================================================================
+
+Yeh document is project ki mukammal (complete) details provide karta hai. Isme
+har file, database, functions, aur libraries ki tafseel shamil hai.
+
+=========================================
+1. DATABASE KI TAFSEEL (DATABASE DETAILS)
+=========================================
+Database Name: `database.db`
+Database Type: SQLite
+Kyun Use Ki?: SQLite ek lightweight, file-based database hai jiske liye kisi
+alag server (jaise MySQL) ki zaroorat nahi padti. Chote se darmiyane (small to
+medium) projects aur scraping tasks jahan data local save karna ho, wahan
+SQLite best aur fast performance deta hai.
+
+### Tables aur Unka Link (Schema & Relationships)
+
+1. `users` Table:
+   - Purpose: Admin aur normal users ka data (login details, profile) save karna.
+   - Columns: id (Primary Key), username, email, password_hash, role ('admin' ya 'user'), is_blocked, full_name, company_name, sender_email, created_at.
+   
+2. `message_templates` Table:
+   - Purpose: Har user ke multiple custom message templates save karna.
+   - Columns: id (Primary Key), user_id (Foreign Key linked to users.id), name, template_text.
+   - Relation: Ek user ke bohot se templates ho sakte hain (1-to-Many).
+   
+3. `buyers` Table:
+   - Purpose: Scrape ki gayi har lead ka data save karna.
+   - Columns: buyer_id (Primary Key), brand_name, email, website, niche, contact_page, source_url, status, is_relevant, lead_category, country, created_at, generated_by.
+   - Relation: `generated_by` column `users` table ki `id` se linked hai ta ke pata chale kis user ne konsi lead nikali hai.
+
+=========================================
+2. FILES AUR UNKI LINKING (FILE STRUCTURE)
+=========================================
+Project main 2 main files hain jo aapas mein link hain:
+
+1. `app.py` (Main Web Server File)
+   - Yeh file project ka "Brain" hai. Flask web server isi se chalta hai.
+   - UI templates (`.html` files) ko data yahi pass karti hai.
+   - Isme API endpoints hain jo frontend se request le kar `shopify_leads.py` ko signal bhejte hain (Scraping start karne ke liye).
+
+2. `shopify_leads.py` (Scraping Engine)
+   - Yeh file actual Selenium Automation aur scraping ka kaam karti hai.
+   - `app.py` is file ke functions ko call karta hai jab user "Generate Leads" par click karta hai.
+
+3. `init_sqlite.py` & `migrate_country.py`
+   - Yeh helper scripts hain jo database aur tables bananay aur unme naye columns add karne (migration) ke liye use hoti hain.
+
+4. `templates/` Folder
+   - Isme frontend UI ki HTML files hain jo `base.html` ko extend karti hain.
+   - Files: `admin_dashboard.html`, `user_dashboard.html`, `settings.html`, `generate_leads.html`, `login.html`, `register.html`, etc.
+
+=========================================
+3. CLASSES AUR FUNCTIONS KI TAFSEEL
+=========================================
+Note: Is project mein Python Classes ka istemaal zyada nahi kiya gaya kyunki functional programming (functions banana) script aur web routes ke liye zyada asaan aur fast thi. Magar jo Flask-Login ki classes hain wo use hui hain.
+
+A. `app.py` ke Functions:
+--------------------------
+- `User` (Class): Flask-Login ki `UserMixin` class ko extend karti hai. User ki session management, login/logout ke liye use hoti hai.
+- `load_user(user_id)`: Logged-in user ka data session mein load karta hai.
+- `get_db_connection()`: Database se connect hone ke liye.
+- `login()`, `register()`, `logout()`: Authentication routes.
+- `admin_dashboard()` & `user_dashboard()`: Dashboards par data (stats, charts, tables) load karte hain.
+- `settings()`: User apni profile aur templates update/add karta hai.
+- `api_start_scraper()`: Frontend se AJAX request aati hai, aur yeh background thread mein `run_scraper_bg` function chalata hai.
+
+B. `shopify_leads.py` ke Functions:
+-----------------------------------
+- `scrape(keyword, max_leads, user_id, country)`: Main function jo Google par query banata hai (site:myshopify.com) aur links nikalta hai.
+- `process_stores(...)`: Google se mile links ko ek ek kar ke visit karta hai.
+- `find_contact_page(driver)`: Website par 'Contact Us' ka page dhoondta hai.
+- `fill_form(driver, brand, niche, settings)`: User ke random template ko select kar ke form ke andar data automatically type karta hai.
+- `try_submit_form(driver)`: Form ko dhundh kar automatically "Submit" ya "Send" button par click karta hai.
+- `update_status()`: `app.py` ko real-time status batata hai takay UI par loading bar chal sake.
+- `save_to_database()`: Scrape ki gayi lead ko `buyers` table mein insert karta hai.
+
+=========================================
+4. LIBRARIES AUR UNKA MAQSAD (LIBRARIES USED)
+=========================================
+1. `Flask`:
+   - Kyun Use Ki?: Python mein web application, backend API, aur routes (URLs) bananay ke liye sab se behtareen aur lightweight framework hai.
+   
+2. `Flask-Login`:
+   - Kyun Use Ki?: User ki login session (cookies waghera) ko secure aur asaan tareeqay se manage karne ke liye. (Is se `@login_required` jaisay tags milte hain).
+
+3. `Selenium`:
+   - Kyun Use Ki?: Web browser (Chrome/Firefox) ko code ke zariye automatically control karne ke liye. Forms mein text likhna aur buttons par click karna Selenium ke baghair mumkin nahi. (Is project mein headless/background scraping ke liye use hui).
+
+4. `sqlite3`:
+   - Kyun Use Ki?: Python ki built-in library hai jo SQLite database ko connect aur SQL queries execute karne deti hai.
+
+5. `werkzeug.security`:
+   - Kyun Use Ki?: Passwords ko plaintext ki bajaye secure hash (jaise `pbkdf2:sha256`) mein convert kar ke database mein save karne ke liye, takay data secure rahay.
+
+6. `threading`:
+   - Kyun Use Ki?: Kyun ke Scraping mein time lagta hai, is library ki madad se scraping background mein chalti rehti hai jabke user web page par aaram se doosre kaam kar sakta hai (UI hang nahi hota).
+
+7. `Chart.js` (Frontend Library):
+   - Kyun Use Ki?: Dashboards par Leads by Region aur Top Niches ke khoobsurat Graphs (Bar chart, Doughnut chart) dikhanay ke liye.
+
+=========================================
+MUKAMMAL (CONCLUSION)
+=========================================
+Yeh project ek mukammal SaaS-style automation tool hai. `app.py` UI aur users ko control karta hai, jabke `shopify_leads.py` uske isharay par automatically internet par ja kar data jama karta hai aur form fill karta hai. Data `database.db` mein mehfooz (secure) rehta hai.

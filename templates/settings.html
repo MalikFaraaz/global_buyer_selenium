@@ -1,0 +1,612 @@
+{% extends "base.html" %}
+
+{% block extra_css %}
+<style>
+    .settings-header {
+        margin-bottom: 30px;
+    }
+    .settings-header h1 { color: var(--dark-blue); font-size: 1.8rem; }
+    .settings-header p  { color: var(--text-gray); margin-top: 6px; }
+
+    .settings-grid {
+        display: grid;
+        grid-template-columns: 380px 1fr;
+        gap: 25px;
+        align-items: start;
+    }
+
+    .settings-card {
+        background: var(--white);
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        padding: 28px;
+    }
+
+    .card-title {
+        color: var(--dark-blue);
+        font-size: 1.05rem;
+        font-weight: 700;
+        margin-bottom: 20px;
+        padding-bottom: 12px;
+        border-bottom: 2px solid var(--light-blue);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .form-group { margin-bottom: 18px; }
+    .form-group label {
+        display: block;
+        font-weight: 600;
+        font-size: 0.82rem;
+        color: var(--text-gray);
+        margin-bottom: 6px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .form-group input, .form-group textarea, .form-group select {
+        width: 100%;
+        padding: 10px 13px;
+        border: 1.5px solid var(--border-color);
+        border-radius: 7px;
+        font-size: 0.93rem;
+        transition: border-color 0.2s, box-shadow 0.2s;
+        font-family: 'Inter', sans-serif;
+        background: #fff;
+    }
+    .form-group input:focus, .form-group textarea:focus {
+        outline: none;
+        border-color: var(--accent-blue);
+        box-shadow: 0 0 0 3px rgba(42, 122, 204, 0.1);
+    }
+
+    .btn-save {
+        background: linear-gradient(135deg, var(--accent-blue), var(--dark-blue));
+        color: white;
+        border: none;
+        padding: 10px 24px;
+        border-radius: 7px;
+        font-size: 0.95rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: opacity 0.2s, transform 0.1s;
+    }
+    .btn-save:hover { opacity: 0.9; transform: translateY(-1px); }
+
+    /* === Templates Section === */
+    .templates-section { margin-top: 0; }
+
+    .template-list { display: flex; flex-direction: column; gap: 14px; margin-bottom: 20px; }
+
+    .template-item {
+        border: 1.5px solid var(--border-color);
+        border-radius: 10px;
+        overflow: hidden;
+        transition: box-shadow 0.2s;
+    }
+    .template-item:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.07); }
+
+    .template-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 16px;
+        background: var(--light-blue);
+        cursor: pointer;
+        user-select: none;
+    }
+
+    .template-name {
+        font-weight: 700;
+        color: var(--dark-blue);
+        font-size: 0.95rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .shuffle-badge {
+        font-size: 0.72rem;
+        background: #e8f5e9;
+        color: #2e7d32;
+        border: 1px solid #c8e6c9;
+        padding: 2px 8px;
+        border-radius: 20px;
+        font-weight: 600;
+    }
+
+    .template-actions { display: flex; gap: 8px; }
+
+    .btn-edit {
+        background: #fff3e0;
+        color: #e67e22;
+        border: 1px solid #f0c27f;
+        padding: 4px 12px;
+        border-radius: 5px;
+        font-size: 0.8rem;
+        cursor: pointer;
+        font-weight: 600;
+    }
+    .btn-edit:hover { background: #fde0b5; }
+
+    .btn-del {
+        background: #ffebee;
+        color: #c62828;
+        border: 1px solid #f5c6c6;
+        padding: 4px 12px;
+        border-radius: 5px;
+        font-size: 0.8rem;
+        cursor: pointer;
+        font-weight: 600;
+    }
+    .btn-del:hover { background: #ffc5c5; }
+
+    .template-body {
+        padding: 14px 16px;
+        background: #fafbfc;
+        display: none;
+    }
+    .template-body.open { display: block; }
+
+    .template-preview {
+        font-family: 'Courier New', monospace;
+        font-size: 0.84rem;
+        color: var(--text-dark);
+        white-space: pre-wrap;
+        line-height: 1.6;
+        background: #f0f4f8;
+        padding: 12px;
+        border-radius: 6px;
+        margin-bottom: 12px;
+        border-left: 3px solid var(--accent-blue);
+    }
+
+    /* Add Template Form */
+    .add-template-box {
+        border: 2px dashed var(--border-color);
+        border-radius: 10px;
+        padding: 20px;
+        background: #fafbfc;
+    }
+    .add-template-box h4 {
+        color: var(--dark-blue);
+        font-size: 0.95rem;
+        margin-bottom: 14px;
+    }
+
+    .hint { font-size: 0.78rem; color: var(--text-gray); margin-top: 5px; }
+    .hint code {
+        background: var(--light-blue);
+        padding: 1px 5px;
+        border-radius: 3px;
+        color: var(--primary-blue);
+        font-size: 0.76rem;
+    }
+
+    .placeholder-tags { margin-bottom: 12px; }
+    .placeholder-badge {
+        display: inline-block;
+        background: #e8f0fe;
+        color: #1c5f99;
+        border: 1px solid #c5d9f7;
+        border-radius: 12px;
+        padding: 3px 10px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        margin: 2px 2px;
+        cursor: pointer;
+        font-family: inherit;
+        outline: none;
+        transition: background 0.15s;
+    }
+    .placeholder-badge:hover { background: #c5d9f7; }
+
+    .no-templates {
+        text-align: center;
+        padding: 30px;
+        color: var(--text-gray);
+        font-size: 0.9rem;
+    }
+
+    /* Edit Modal */
+    .modal-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.4);
+        z-index: 9998;
+        align-items: center;
+        justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal-box {
+        background: white;
+        border-radius: 12px;
+        padding: 28px;
+        width: 550px;
+        max-width: 95vw;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+        z-index: 9999;
+        position: relative;
+    }
+    .modal-box h3 { color: var(--dark-blue); margin-bottom: 18px; }
+    .modal-close {
+        position: absolute;
+        top: 14px; right: 18px;
+        background: none;
+        border: none;
+        font-size: 1.3rem;
+        cursor: pointer;
+        color: var(--text-gray);
+    }
+    .modal-box textarea { height: 180px; font-family: monospace; font-size: 0.87rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="settings-header">
+    <h1>⚙️ Outreach Settings</h1>
+    <p>Manage your sender profile and multiple message templates. Templates are randomly shuffled during scraping.</p>
+</div>
+
+<div class="settings-grid">
+
+    <!-- LEFT: Sender Profile -->
+    <div class="settings-card">
+        <div class="card-title">👤 Sender Profile</div>
+        <form method="POST" action="{{ url_for('settings') }}">
+            <div class="form-group">
+                <label>Your Full Name</label>
+                <input type="text" name="full_name" value="{{ user_settings.full_name }}" placeholder="e.g. John Smith" required>
+            </div>
+            <div class="form-group">
+                <label>Sender Email</label>
+                <input type="email" name="sender_email" value="{{ user_settings.sender_email }}" placeholder="e.g. john@yourcompany.com" required>
+            </div>
+            <div class="form-group">
+                <label for="company_name">Company Name</label>
+                <input type="text" name="company_name" id="company_name" value="{{ user_settings.company_name }}" placeholder="e.g. Global Headwear Co." required>
+            </div>
+
+            <!-- Gemini AI Outreach Section -->
+            <div style="background: linear-gradient(135deg, #f0fdf4 0%, #e0f2fe 100%); padding: 18px; border-radius: 10px; border: 1.5px solid #bae6fd; margin-top: 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; margin: 0; font-weight: 700; text-transform: none; font-size: 0.95rem; color: #0369a1;">
+                        <input type="checkbox" name="ai_enabled" id="ai_enabled" value="1" {% if user_settings.ai_enabled == 1 %}checked{% endif %} style="width: 18px; height: 18px; accent-color: #0284c7; cursor: pointer;">
+                        <span>🤖 <strong>Gemini AI Real-Time Personalization</strong></span>
+                    </label>
+                    <span style="font-size: 0.72rem; background: #0284c7; color: #fff; padding: 2px 8px; border-radius: 12px; font-weight: 600;">P1 Pro Feature</span>
+                </div>
+                <p style="font-size: 0.78rem; color: #475569; margin-bottom: 12px; line-height: 1.4;">
+                    When enabled, Gemini 2.5 Flash analyzes each store's products/taglines live and crafts a hyper-personalized 3-line cold hook.
+                </p>
+
+                <div id="aiSettingsBox" style="display: {% if user_settings.ai_enabled == 1 %}block{% else %}none{% endif %};">
+                    <div class="form-group" style="margin-bottom: 12px;">
+                        <label for="gemini_api_key" style="color: #0369a1;">Gemini API Key</label>
+                        <div style="position: relative;">
+                            <input type="password" name="gemini_api_key" id="gemini_api_key" value="{{ user_settings.gemini_api_key }}" placeholder="AIzaSy..." style="padding-right: 40px; font-family: monospace;">
+                            <button type="button" id="toggleApiKeyBtn" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 1rem;">👁️</button>
+                        </div>
+                        <div style="font-size: 0.73rem; color: #64748b; margin-top: 3px;">Get your free API key at <a href="https://aistudio.google.com/" target="_blank" style="color: #0284c7; text-decoration: none;">Google AI Studio</a>.</div>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 12px;">
+                        <label for="ai_tone" style="color: #0369a1;">Outreach Pitch Strategy</label>
+                        <select name="ai_tone" id="ai_tone">
+                            <option value="b2b_wholesale" {% if user_settings.ai_tone == 'b2b_wholesale' %}selected{% endif %}>🏭 Direct B2B Manufacturer (Factory Direct, Low MOQs)</option>
+                            <option value="compliment_collab" {% if user_settings.ai_tone == 'compliment_collab' %}selected{% endif %}>🤝 Compliment & Creative Collaboration</option>
+                            <option value="cost_margin" {% if user_settings.ai_tone == 'cost_margin' %}selected{% endif %}>💰 Supplier & Margin Optimization</option>
+                            <option value="custom" {% if user_settings.ai_tone == 'custom' %}selected{% endif %}>✍️ Custom Prompt Instructions</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group" id="customPromptGroup" style="display: {% if user_settings.ai_tone == 'custom' %}block{% else %}none{% endif %}; margin-bottom: 12px;">
+                        <label for="ai_custom_prompt" style="color: #0369a1;">Custom AI Instructions</label>
+                        <textarea name="ai_custom_prompt" id="ai_custom_prompt" rows="3" placeholder="e.g. Mention that we specialize in organic recycled fabrics and can ship custom prototypes within 5 days.">{{ user_settings.ai_custom_prompt }}</textarea>
+                    </div>
+
+                    <div style="display: flex; gap: 8px; margin-top: 10px;">
+                        <button type="button" id="testAiBtn" class="btn-edit" style="background: #e0f2fe; color: #0369a1; border-color: #7dd3fc; padding: 6px 14px; font-weight: 600;">⚡ Test AI Generation</button>
+                    </div>
+                    <div id="aiTestResult" style="display: none; margin-top: 10px; padding: 10px; background: #ffffff; border: 1px solid #7dd3fc; border-radius: 6px; font-size: 0.82rem; color: #1e293b; line-height: 1.4;"></div>
+                </div>
+            </div>
+
+            <!-- Rotating Proxies Pool Section -->
+            <div style="background: #fdf4ff; padding: 18px; border-radius: 10px; border: 1.5px solid #f0abfc; margin-top: 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; margin: 0; font-weight: 700; text-transform: none; font-size: 0.95rem; color: #86198f;">
+                        <input type="checkbox" name="proxy_enabled" id="proxy_enabled" value="1" {% if user_settings.proxy_enabled == 1 %}checked{% endif %} style="width: 18px; height: 18px; accent-color: #c026d3; cursor: pointer;">
+                        <span>🌐 <strong>Rotating Proxies & IP Rotation</strong></span>
+                    </label>
+                    <span style="font-size: 0.72rem; background: #c026d3; color: #fff; padding: 2px 8px; border-radius: 12px; font-weight: 600;">P3 Security</span>
+                </div>
+                <p style="font-size: 0.78rem; color: #475569; margin-bottom: 10px; line-height: 1.4;">
+                    Distribute scraper workers across distinct IP addresses to bypass rate-limits, Cloudflare bans, and geo-blocks.
+                </p>
+
+                <div id="proxySettingsBox" style="display: {% if user_settings.proxy_enabled == 1 %}block{% else %}none{% endif %};">
+                    <div class="form-group" style="margin-bottom: 8px;">
+                        <label for="proxy_list" style="color: #86198f;">Proxy List (One per line)</label>
+                        <textarea name="proxy_list" id="proxy_list" rows="4" placeholder="http://username:password@ip:port&#10;http://ip:port&#10;socks5://ip:port" style="font-family: monospace; font-size: 0.82rem;">{{ user_settings.proxy_list }}</textarea>
+                        <div style="font-size: 0.73rem; color: #64748b; margin-top: 3px;">Supports HTTP/HTTPS/SOCKS5. Proxies will be automatically rotated per worker thread.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Browser Preview Toggle -->
+            <div class="form-group" style="background: #f8fafc; padding: 14px; border-radius: 8px; border: 1.5px solid var(--border-color); margin-top: 20px;">
+                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; margin: 0; font-weight: 600; text-transform: none; font-size: 0.9rem; color: var(--dark-blue);">
+                    <input type="checkbox" name="show_browser" id="show_browser" value="1" {% if user_settings.show_browser == 1 %}checked{% endif %} style="width: 18px; height: 18px; accent-color: var(--accent-blue); cursor: pointer;">
+                    <span>🖥️ <strong>Live Browser Preview</strong></span>
+                </label>
+                <div style="font-size: 0.78rem; color: var(--text-gray); margin-top: 6px; line-height: 1.4;">
+                    When enabled, Chrome opens a visible desktop window showing real-time browsing and form submissions. Uncheck to run silently in the background (Headless Mode).
+                </div>
+            </div>
+            <button type="submit" class="btn-save">💾 Save Profile & Preferences</button>
+        </form>
+
+        <div style="margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border-color);">
+            <p style="font-size:0.83rem; color:var(--text-gray); line-height:1.6;">
+                <strong>🔀 Shuffle Mode:</strong> When scraping runs, one template is <em>randomly picked</em> for each store.
+                Add more templates below to maximize variety and avoid spam filters.
+            </p>
+        </div>
+    </div>
+
+    <!-- RIGHT: Templates -->
+    <div class="settings-card templates-section">
+        <div class="card-title" style="justify-content: space-between;">
+            <span>✉️ Message Templates</span>
+            <span style="font-size:0.8rem; font-weight:400; color:var(--text-gray);">{{ templates|length }} template(s) — randomly shuffled</span>
+        </div>
+
+        <!-- Available placeholders -->
+        <div class="placeholder-tags" id="placeholderBar">
+            <span style="font-size:0.8rem; color:var(--text-gray); margin-right:6px;">Insert placeholder:</span>
+            <button type="button" class="placeholder-badge" data-tag="{brand}">{brand}</button>
+            <button type="button" class="placeholder-badge" data-tag="{niche}">{niche}</button>
+            <button type="button" class="placeholder-badge" data-tag="{sender_name}">{sender_name}</button>
+            <button type="button" class="placeholder-badge" data-tag="{company_name}">{company_name}</button>
+        </div>
+
+        <!-- Existing Templates List -->
+        <div class="template-list">
+            {% for tmpl in templates %}
+            <div class="template-item" id="tmpl-card-{{ tmpl[0] }}">
+                <div class="template-header" data-toggle-id="{{ tmpl[0] }}">
+                    <span class="template-name">
+                        🔀 <span id="tname-{{ tmpl[0] }}">{{ tmpl[1] }}</span>
+                        <span class="shuffle-badge">Shuffle Active</span>
+                    </span>
+                    <div class="template-actions">
+                        <button type="button" class="btn-edit" data-edit-id="{{ tmpl[0] }}">✏️ Edit</button>
+                        <form class="delete-template-form" method="POST" action="{{ url_for('delete_template', template_id=tmpl[0]) }}" style="display:inline;">
+                            <button type="submit" class="btn-del">🗑 Delete</button>
+                        </form>
+                    </div>
+                </div>
+                <div class="template-body" id="tbody-{{ tmpl[0] }}">
+                    <div class="template-preview" id="tprev-{{ tmpl[0] }}">{{ tmpl[2] }}</div>
+                    <textarea id="ttext-{{ tmpl[0] }}" style="display:none;" readonly>{{ tmpl[2] }}</textarea>
+                </div>
+            </div>
+            {% else %}
+            <div class="no-templates">No templates yet. Add one below to get started.</div>
+            {% endfor %}
+        </div>
+
+        <!-- Add New Template -->
+        <div class="add-template-box">
+            <h4>➕ Add New Template</h4>
+            <form method="POST" action="{{ url_for('add_template') }}">
+                <div class="form-group">
+                    <label for="newTmplName">Template Name</label>
+                    <input type="text" name="template_name" id="newTmplName" placeholder='e.g. "Casual Pitch" or "Formal Outreach"' required>
+                </div>
+                <div class="form-group">
+                    <label for="newTmplText">Template Text</label>
+                    <textarea name="template_text" id="newTmplText" rows="7"
+                              placeholder="Hi {brand} team,&#10;&#10;I came across your {niche} store...&#10;&#10;Best regards,&#10;{sender_name}&#10;{company_name}"></textarea>
+                    <p class="hint">Use placeholders: <code>{brand}</code> <code>{niche}</code> <code>{sender_name}</code> <code>{company_name}</code></p>
+                </div>
+                <button type="submit" class="btn-save">➕ Add Template</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Modal -->
+<div class="modal-overlay" id="editModal">
+    <div class="modal-box">
+        <button type="button" class="modal-close" id="modalCloseBtn">✕</button>
+        <h3>✏️ Edit Template</h3>
+        <form method="POST" id="editForm" action="">
+            <div class="form-group">
+                <label for="editName">Template Name</label>
+                <input type="text" name="template_name" id="editName" required>
+            </div>
+            <div class="form-group">
+                <label for="editText">Template Text</label>
+                <textarea name="template_text" id="editText" rows="8"></textarea>
+            </div>
+            <button type="submit" class="btn-save">💾 Save Changes</button>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Gemini AI UI handlers
+    const aiEnabledCheckbox = document.getElementById('ai_enabled');
+    const aiSettingsBox = document.getElementById('aiSettingsBox');
+    if (aiEnabledCheckbox && aiSettingsBox) {
+        aiEnabledCheckbox.addEventListener('change', function() {
+            aiSettingsBox.style.display = this.checked ? 'block' : 'none';
+        });
+    }
+
+    // Proxy UI handlers
+    const proxyEnabledCheckbox = document.getElementById('proxy_enabled');
+    const proxySettingsBox = document.getElementById('proxySettingsBox');
+    if (proxyEnabledCheckbox && proxySettingsBox) {
+        proxyEnabledCheckbox.addEventListener('change', function() {
+            proxySettingsBox.style.display = this.checked ? 'block' : 'none';
+        });
+    }
+
+    const toggleApiKeyBtn = document.getElementById('toggleApiKeyBtn');
+    const apiKeyInput = document.getElementById('gemini_api_key');
+    if (toggleApiKeyBtn && apiKeyInput) {
+        toggleApiKeyBtn.addEventListener('click', function() {
+            apiKeyInput.type = apiKeyInput.type === 'password' ? 'text' : 'password';
+        });
+    }
+
+    const aiToneSelect = document.getElementById('ai_tone');
+    const customPromptGroup = document.getElementById('customPromptGroup');
+    if (aiToneSelect && customPromptGroup) {
+        aiToneSelect.addEventListener('change', function() {
+            customPromptGroup.style.display = this.value === 'custom' ? 'block' : 'none';
+        });
+    }
+
+    const testAiBtn = document.getElementById('testAiBtn');
+    const aiTestResult = document.getElementById('aiTestResult');
+    if (testAiBtn && aiTestResult) {
+        testAiBtn.addEventListener('click', async function() {
+            const apiKey = (apiKeyInput ? apiKeyInput.value : '').trim();
+            const tone = aiToneSelect ? aiToneSelect.value : 'b2b_wholesale';
+            const customPrompt = document.getElementById('ai_custom_prompt') ? document.getElementById('ai_custom_prompt').value : '';
+            const companyName = document.getElementById('company_name') ? document.getElementById('company_name').value : 'Global Headwear Co.';
+
+            if (!apiKey) {
+                aiTestResult.style.display = 'block';
+                aiTestResult.innerHTML = '<span style="color: #dc2626;">⚠️ Please enter your Gemini API Key first.</span>';
+                return;
+            }
+
+            testAiBtn.disabled = true;
+            testAiBtn.textContent = '⏳ Generating...';
+            aiTestResult.style.display = 'block';
+            aiTestResult.innerHTML = '<span style="color: #0369a1;">Generating live sample pitch with Gemini 2.5 Flash...</span>';
+
+            try {
+                const res = await fetch('/api/test_ai_prompt', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        api_key: apiKey,
+                        tone: tone,
+                        custom_prompt: customPrompt,
+                        company_name: companyName
+                    })
+                });
+                const data = await res.json();
+                if (data.status === 'success') {
+                    aiTestResult.innerHTML = '<strong>✨ Live AI Generation Preview:</strong><br><div style="white-space: pre-wrap; margin-top: 6px; padding: 8px; background: #f8fafc; border-radius: 4px; border: 1px dashed #94a3b8;">' + data.message + '</div>';
+                } else {
+                    aiTestResult.innerHTML = '<span style="color: #dc2626;">❌ Error: ' + (data.message || 'Generation failed') + '</span>';
+                }
+            } catch (err) {
+                aiTestResult.innerHTML = '<span style="color: #dc2626;">❌ Network error: ' + err.message + '</span>';
+            } finally {
+                testAiBtn.disabled = false;
+                testAiBtn.textContent = '⚡ Test AI Generation';
+            }
+        });
+    }
+
+    let activeTextarea = document.getElementById('newTmplText');
+
+    // Track which textarea was last focused
+    document.querySelectorAll('textarea').forEach(ta => {
+        ta.addEventListener('focus', () => { activeTextarea = ta; });
+    });
+
+    // Handle placeholder badge insertion cleanly
+    document.querySelectorAll('.placeholder-badge').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const placeholder = this.getAttribute('data-tag');
+            if (!placeholder || !activeTextarea) return;
+            const start = activeTextarea.selectionStart;
+            const end   = activeTextarea.selectionEnd;
+            const val   = activeTextarea.value;
+            activeTextarea.value = val.slice(0, start) + placeholder + val.slice(end);
+            activeTextarea.focus();
+            activeTextarea.selectionStart = activeTextarea.selectionEnd = start + placeholder.length;
+        });
+    });
+
+    // Toggle template accordion
+    document.querySelectorAll('.template-header').forEach(header => {
+        header.addEventListener('click', function(e) {
+            if (e.target.closest('.template-actions')) return;
+            const id = this.getAttribute('data-toggle-id');
+            const body = document.getElementById('tbody-' + id);
+            if (body) {
+                body.classList.toggle('open');
+            }
+        });
+    });
+
+    // Edit button click
+    document.querySelectorAll('.btn-edit').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const id = this.getAttribute('data-edit-id');
+            openEdit(id);
+        });
+    });
+
+    // Delete confirmation
+    document.querySelectorAll('.delete-template-form').forEach(form => {
+        form.addEventListener('submit', function(e) {
+            if (!confirm('Delete this template?')) {
+                e.preventDefault();
+            }
+        });
+    });
+
+    function openEdit(id) {
+        const nameEl = document.getElementById('tname-' + id);
+        const textEl = document.getElementById('ttext-' + id);
+        const name = nameEl ? nameEl.textContent.trim() : '';
+        const text = textEl ? textEl.value : '';
+
+        document.getElementById('editForm').action = '/settings/templates/edit/' + id;
+        document.getElementById('editName').value  = name;
+        document.getElementById('editText').value  = text;
+        activeTextarea = document.getElementById('editText');
+        const modal = document.getElementById('editModal');
+        if (modal) {
+            modal.classList.add('open');
+        }
+    }
+
+    function closeEdit() {
+        const modal = document.getElementById('editModal');
+        if (modal) {
+            modal.classList.remove('open');
+        }
+    }
+
+    const closeBtn = document.getElementById('modalCloseBtn');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', closeEdit);
+    }
+
+    // Close modal on overlay click
+    const modalEl = document.getElementById('editModal');
+    if (modalEl) {
+        modalEl.addEventListener('click', function(e) {
+            if (e.target === this) closeEdit();
+        });
+    }
+</script>
+{% endblock %}

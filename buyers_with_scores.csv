@@ -1,0 +1,13 @@
+buyer_id,brand_name,email,website,niche,contact_page,phone,address,social_links,is_relevant,valid_email,contact_available,has_phone,has_address,has_socials,brand_length,website_length,niche_encoded,lead_score,lead_category
+2,Rayyan & Co.,24rc.collection@gmail.com,https://rayyan-co.myshopify.com/,Headwear & Accessories,https://rayyan-co.myshopify.com/pages/contact-us,,,,1,1,1,0,0,0,12,32,0,80,High
+3,South28Th,south28boutique@gmail.com,https://south28th.myshopify.com/,Headwear & Accessories,https://south28th.myshopify.com/pages/contact,,,,1,1,1,0,0,0,9,32,0,88,High
+4,The Fashion Us,,https://the-fashion-us.myshopify.com/,Headwear & Accessories,https://the-fashion-us.myshopify.com/pages/contact-us,,,,0,0,1,0,0,0,14,37,0,0,Low
+5,Alondra'S Fashion Boutique,,https://alondrasfashionboutique.myshopify.com/,Headwear & Accessories,https://alondrasfashionboutique.myshopify.com/pages/contact,,,,0,0,1,0,0,0,26,46,0,0,Low
+6,Lafinchfabrics,,https://lafinchfabrics.myshopify.com/,Headwear & Accessories,https://lafinchfabrics.myshopify.com/pages/contact,,,,0,0,1,0,0,0,14,37,0,0,Low
+7,Shop Womens Clothing & Fashion,,https://yamamacart.myshopify.com/,Headwear & Accessories,https://yamamacart.myshopify.com/pages/contact-us,,,,0,0,1,0,0,0,30,33,0,3,Low
+8,Jimmys1920,,https://jimmys1920.myshopify.com/,Headwear & Accessories,https://jimmys1920.myshopify.com/pages/contact-us,,,,0,0,1,0,0,0,10,33,0,8,Low
+9,Usa Fashion,,https://r50dzm-jz.myshopify.com/,Headwear & Accessories,https://r50dzm-jz.myshopify.com/pages/contact,,,,0,0,1,0,0,0,11,32,0,16,Low
+10,Lulu’S Molly,contact@lulusmolly.com,https://mp1rce-uu.myshopify.com/,Headwear & Accessories,https://mp1rce-uu.myshopify.com/pages/contact-us,,,,1,1,1,0,0,0,12,32,0,80,High
+11,Miss Usa'S She'S Iconic™ Shop,,https://miss-usas-shes-iconic-shop.myshopify.com/,Headwear & Accessories,https://miss-usas-shes-iconic-shop.myshopify.com/pages/contact,,,,0,0,1,0,0,0,29,49,0,0,Low
+12,Louiscastel,,https://louiscastelusa.myshopify.com/,Headwear & Accessories,https://louiscastelusa.myshopify.com/pages/contact-us,,,,0,0,1,0,0,0,11,37,0,0,Low
+13,Usa Curling Shop,,https://usacurling.myshopify.com/,Headwear & Accessories,https://usacurling.myshopify.com/pages/contact,,,,0,0,1,0,0,0,16,33,0,3,Low

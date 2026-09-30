@@ -1,0 +1,437 @@
+================================================================================
+             GLOBAL BUYER SELENIUM — COMPLETE PROJECT DETAIL
+================================================================================
+
+
+PROJECT KA MAQSAD (PURPOSE)
+================================================================================
+
+Yeh ek SaaS-style Lead Generation & Automation Tool hai jo:
+1. Internet par Shopify stores ko automatically dhundta hai (DuckDuckGo search se)
+2. Har store ka brand name, email, niche nikalta hai
+3. Store ki contact page dhundhta hai aur form automatically fill kar ke submit karta hai
+4. Leads ko AI/ML models se score karta hai (High / Medium / Low quality)
+5. Sab data ek dashboard par dikhaata hai (charts, tables, stats)
+
+
+ARCHITECTURE OVERVIEW
+================================================================================
+
+    User Browser  --->  app.py (Flask Server)  --->  shopify_leads.py (Selenium Engine)
+         ^                    |                              |
+         |                    v                              v
+         |              database.db (SQLite)         DuckDuckGo / Shopify Stores
+         |                    ^
+         |                    |
+    Dashboard/Charts          |
+                              |
+    NLP.py ---> Oracle DB <--- ML.py ---> buyer_model.pkl
+
+
+COMPLETE FILE STRUCTURE
+================================================================================
+
+global buyer selenium/
+|-- app.py                    <-- Main Flask Web Server (Brain)
+|-- shopify_leads.py          <-- Selenium Scraping Engine
+|-- NLP.py                    <-- Text Cleaning & Relevance Labeling
+|-- ML.py                     <-- Machine Learning Lead Scoring
+|-- init_sqlite.py            <-- Database Initialization Script
+|-- database.db               <-- SQLite Database File
+|-- buyer_model.pkl           <-- Trained ML Model (Saved)
+|-- label_encoder.pkl         <-- Label Encoder (Saved)
+|-- requirements.txt          <-- Python Libraries List
+|-- README.md                 <-- Setup Guide
+|-- project_summary.txt       <-- Short Project Summary
+|-- project_documentation.txt <-- Detailed Documentation (Urdu)
+|
+|-- buyers_noisy_1000.xlsx    <-- Raw noisy buyer data (1000 records)
+|-- clean_buyers.csv          <-- NLP se cleaned data
+|-- buyers_with_scores.csv    <-- ML scored data
+|-- Predicted_Buyers.csv      <-- Final predicted buyers
+|-- feature_importance.png    <-- ML Feature Importance Chart
+|
+|-- templates/                <-- HTML Frontend Files
+|   |-- base.html
+|   |-- login.html
+|   |-- register.html
+|   |-- admin_dashboard.html
+|   |-- user_dashboard.html
+|   |-- generate_leads.html
+|   |-- settings.html
+|   |-- admin_users.html
+|   |-- edit_user.html
+|   |-- export_history.html
+|
+|-- static/                   <-- Static Images
+    |-- accuracy.png
+    |-- accuracy_graph.png
+    |-- confusion_matrix.png
+    |-- roc_curve.png
+
+
+================================================================================
+FILE-BY-FILE DETAIL
+================================================================================
+
+
+1. app.py — Main Flask Web Server
+================================================================================
+
+Kya hai: Project ka "Brain". Poora web application isi file se chalta hai.
+
+Kyun use ki: Flask Python ka sab se popular lightweight web framework hai — APIs,
+routes, aur HTML pages serve karne ke liye best hai.
+
+Kya kar rahi hai:
+
+  Section              | Lines   | Kya Karta Hai
+  ---------------------|---------|----------------------------------------------
+  Imports & Setup      | 1-18   | Flask, Flask-Login, Werkzeug import. App create, secret key set, LoginManager setup
+  User Class           | 23-28  | UserMixin extend kar ke session management ke liye User class
+  load_user()          | 30-45  | Logged-in user ka data database se load karta hai (Flask-Login ke liye zaroori)
+  admin_required()     | 47-54  | Decorator function — sirf admin users ko certain pages access deta hai
+  login()              | 57-98  | Login route — username/password check, blocked user check, admin vs user portal separation
+  register()           | 100-129| Registration route — duplicate username check, password hash, new user insert
+  logout()             | 131-135| Session end kar ke login page par redirect
+  admin_users()        | 138-147| Admin page — sab registered users ki list dikhata hai
+  toggle_block()       | 149-167| Admin kisi user ko block/unblock kar sakta hai
+  edit_user()          | 169-213| Admin kisi user ka username, email, password edit kar sakta hai
+  dashboard()          | 216-222| Root "/" route — admin ko admin dashboard, user ko user dashboard redirect karta hai
+  admin_dashboard()    | 224-268| Admin dashboard — total leads, new leads, verified buyers, regions chart, niches chart, recent buyers table, all users list
+  user_dashboard()     | 270-311| User dashboard — sirf apne generated leads ke stats, charts, aur recent leads table
+  generate_leads()     | 314-317| Generate Leads page render karta hai (form dikhata hai)
+  api_start_scraper()  | 319-335| AJAX POST API — keyword, country, max_leads le kar background thread mein scrape() call karta hai
+  api_scraper_status() | 337-342| AJAX GET API — real-time scraper progress (status, progress, logs) return karta hai
+  export_leads()       | 344-368| Sab leads ko CSV file mein download karwata hai + export log save karta hai
+  export_history()     | 370-381| Export history page — admin ko sab exports, user ko sirf apne exports dikhata hai
+  settings()           | 385-425| User settings page — full name, sender email, company name update
+  add_template()       | 428-445| Naya message template add karta hai
+  delete_template()    | 448-460| Template delete karta hai
+  edit_template()      | 463-477| Template edit karta hai
+  app.run()            | 480-481| Server start karta hai (http://127.0.0.1:5000)
+
+Key Libraries Used:
+  - Flask         — Web server aur routing
+  - Flask-Login   — Session management (login/logout cookies)
+  - Werkzeug      — Password hashing (SHA256)
+  - threading     — Background mein scraping chalana (UI hang na ho)
+
+
+2. shopify_leads.py — Selenium Scraping Engine
+================================================================================
+
+Kya hai: Actual automation engine jo browser control kar ke internet se data collect karta hai.
+
+Kyun use ki: Selenium Chrome browser ko programmatically control karta hai — form fill,
+button click, page navigate sab automatic.
+
+Kya kar rahi hai:
+
+  Section          | Function             | Kya Karta Hai
+  -----------------|----------------------|----------------------------------------------
+  Stealth Driver   | create_driver()      | Chrome browser launch karta hai stealth mode mein — persistent profile, realistic User-Agent, automation flags disabled, full JS stealth patches
+  Progress Tracker | update_status()      | UI par real-time progress update karta hai (status bar, logs)
+  Human Typing     | human_type()         | Form fields mein insaan jaisi typing — variable speed, word pauses, thinking gaps
+  Human Scroll     | human_scroll()       | Page scroll karta hai — 80% neeche, 20% upar (natural pattern)
+  Mouse Movement   | human_move_to()      | Mouse ko element tak naturally move kar ke click karta hai (ActionChains)
+  Thinking Pause   | maybe_pause()        | 25% chance se random "content reading" pause
+  Page Warm-up     | warm_up_page()       | Page visit ke baad pehle scroll + random link hover (natural browsing)
+  Email Extract    | extract_emails()     | Page HTML se email addresses regex se nikalta hai
+  Store Verify     | is_real_shopify_store() | Check karta hai ke website sach mein Shopify store hai ya nahi
+  Brand Name       | extract_brand_name() | Page title se brand name extract karta hai
+  Niche Detect     | detect_niche()       | Keywords ke basis par niche identify karta hai (headwear, clothing, fitness, etc.)
+  Contact Finder   | find_contact_page()  | Website par contact page dhundhta hai (links scan + standard paths try)
+  Form Filler      | fill_form()          | Contact form ke fields (name, email, company, message) automatically fill karta hai user ke templates se
+  Form Submit      | try_submit_form()    | Submit/Send button dhundh kar human-like click karta hai
+  Link Collection  | collect_all_links()  | DuckDuckGo par 5 queries x 5 pages search kar ke Shopify store links collect karta hai
+  Store Processing | process_stores()     | Har store visit -> verify -> email extract -> contact page find -> form fill -> submit -> database save
+  DB Save          | save_to_database()   | Lead ko buyers table mein INSERT karta hai
+  Settings Load    | load_user_settings() | User ka name, email, company, templates database se load karta hai
+  Main Entry       | scrape()             | Main function jo app.py call karta hai — driver create -> links collect -> stores process -> cleanup
+
+Key Libraries Used:
+  - Selenium       — Browser automation (Chrome control)
+  - ActionChains   — Natural mouse movements
+  - WebDriverWait  — Smart element waiting
+  - sqlite3        — Database operations
+  - re             — Email regex extraction
+
+
+3. NLP.py — Text Cleaning & Relevance Labeling
+================================================================================
+
+Kya hai: NLP (Natural Language Processing) script jo raw scraped data ko clean aur label karti hai.
+
+Kyun use ki: Scraped data noisy hota hai (special characters, duplicates, invalid emails).
+NLP se data clean aur structured banta hai.
+
+Kya kar rahi hai:
+
+  Step | Function         | Detail
+  -----|------------------|----------------------------------------------
+  1    | Oracle Connect   | Oracle Database se connect ho kar raw buyers data fetch karta hai
+  2    | clean_text()     | Brand name aur niche se special characters hata kar lowercase clean text banata hai
+  3    | valid_email()    | Email address validate karta hai (@ aur . check)
+  4    | Remove Duplicates| Same website wali duplicate entries hata deta hai
+  5    | label_buyer()    | Scoring system: relevant keywords (headwear, clothing, fashion, etc.) + valid email = score. Score >= 2 toh "Relevant"
+  6    | Save CSV         | Clean data clean_buyers.csv mein save karta hai
+  7    | Update Oracle    | is_relevant, relevance_reason, score_reason columns Oracle mein update karta hai
+
+Key Libraries: pandas, re, oracledb
+
+NOTE: Yeh script Oracle Database se connect hoti hai (standalone script hai, Flask app
+se separately run hoti hai). Flask app SQLite use karti hai.
+
+
+4. ML.py — Machine Learning Lead Scoring
+================================================================================
+
+Kya hai: AI models train kar ke har lead ko score (0-100) aur category (High/Medium/Low) deti hai.
+
+Kyun use ki: Manual lead quality check mushkil hai. ML automatically patterns learn
+kar ke predict karta hai ke konsa lead valuable hai.
+
+Kya kar rahi hai:
+
+  Step | Detail
+  -----|----------------------------------------------
+  1    | Oracle Database se buyer data fetch karta hai
+  2    | Features Engineer karta hai: valid_email, contact_available, brand_length, website_length, niche_encoded
+  3    | Data ko 80% train / 20% test mein split karta hai
+  4    | 3 Models Train karta hai: Random Forest (200 trees), Decision Tree, Logistic Regression
+  5    | Accuracy compare karta hai aur best model (Random Forest) choose karta hai
+  6    | Graphs Generate karta hai: Accuracy Comparison, Confusion Matrix, ROC Curve, Feature Importance
+  7    | Lead Score calculate karta hai (0-100) using Random Forest probability
+  8    | Category Assign karta hai: Score >= 80 -> High, >= 50 -> Medium, < 50 -> Low
+  9    | Model ko buyer_model.pkl mein save karta hai (reuse ke liye)
+  10   | Scores Oracle Database mein update karta hai
+  11   | Final data buyers_with_scores.csv mein save karta hai
+
+Key Libraries: scikit-learn, pandas, numpy, matplotlib, joblib, oracledb
+
+
+5. init_sqlite.py — Database Initialization
+================================================================================
+
+Kya hai: Database setup script — tables create karti hai aur default admin/user accounts banati hai.
+
+Kyun use ki: Pehli baar project run karte waqt database blank hota hai. Yeh script
+tables aur initial data setup karti hai.
+
+Kya kar rahi hai:
+
+  Step | Detail
+  -----|----------------------------------------------
+  1    | database.db file create/connect karta hai
+  2    | users table create karta hai (agar exist nahi karti)
+  3    | buyers table create karta hai (agar exist nahi karti)
+  4    | Default admin account create karta hai: admin / admin123
+  5    | Default user account create karta hai: user / user123
+  6    | Ek dummy buyer record insert karta hai (testing ke liye)
+
+
+================================================================================
+DATABASE SCHEMA
+================================================================================
+
+Database: database.db (SQLite)
+
+TABLE 1: users
+  Column         | Type      | Detail
+  ---------------|-----------|----------------------------------------------
+  id             | INTEGER   | Primary Key, Auto Increment
+  username       | TEXT      | Unique, Not Null
+  email          | TEXT      | User email
+  password_hash  | TEXT      | Not Null (SHA256 hashed)
+  role           | TEXT      | "admin" ya "user" (default: "user")
+  is_blocked     | INTEGER   | 0 (active) ya 1 (blocked)
+  full_name      | TEXT      | User ka full name (settings se)
+  company_name   | TEXT      | Company name (settings se)
+  sender_email   | TEXT      | Outreach email (settings se)
+  created_at     | TIMESTAMP | Account creation date
+
+TABLE 2: buyers
+  Column         | Type      | Detail
+  ---------------|-----------|----------------------------------------------
+  buyer_id       | INTEGER   | Primary Key, Auto Increment
+  brand_name     | TEXT      | Scraped store ka brand name
+  email          | TEXT      | Store ka email address
+  website        | TEXT      | Store ki website URL
+  niche          | TEXT      | Detected niche (headwear, clothing, etc.)
+  contact_page   | TEXT      | Contact page URL
+  source_url     | TEXT      | Original search result URL
+  status         | TEXT      | "submitted" / "form_not_filled" / "no_contact_page" / "error"
+  is_relevant    | INTEGER   | 0 ya 1 (NLP se labeled)
+  lead_category  | TEXT      | "High" / "Medium" / "Low" (ML se scored)
+  country        | TEXT      | Target country
+  created_at     | TIMESTAMP | Lead creation date
+  generated_by   | INTEGER   | Foreign Key -> users.id (kis user ne generate kiya)
+
+TABLE 3: message_templates
+  Column         | Type      | Detail
+  ---------------|-----------|----------------------------------------------
+  id             | INTEGER   | Primary Key, Auto Increment
+  user_id        | INTEGER   | Foreign Key -> users.id
+  name           | TEXT      | Template ka naam
+  template_text  | TEXT      | Template text with placeholders: {brand}, {niche}, {sender_name}, {company_name}
+
+TABLE 4: export_logs
+  Column         | Type      | Detail
+  ---------------|-----------|----------------------------------------------
+  id             | INTEGER   | Primary Key, Auto Increment
+  user_id        | INTEGER   | Foreign Key -> users.id
+  username       | TEXT      | Export karne wale ka username
+  total_leads    | INTEGER   | Total leads exported
+  export_date    | TIMESTAMP | Export ki date/time
+
+RELATIONSHIPS:
+  - users (1) ---> (Many) buyers         [generated_by -> users.id]
+  - users (1) ---> (Many) message_templates [user_id -> users.id]
+  - users (1) ---> (Many) export_logs     [user_id -> users.id]
+
+
+================================================================================
+TEMPLATES (HTML FILES) DETAIL
+================================================================================
+
+Base Template:
+  base.html              — Master layout — navigation bar, sidebar, CSS styles, footer.
+                           Sab pages ise extend karte hain.
+
+Authentication Pages:
+  login.html             — Login page — username/password form, admin vs user portal toggle, register link
+  register.html          — Registration page — new user signup form
+
+Dashboard Pages:
+  admin_dashboard.html   — Admin Dashboard — total leads, new today, verified buyers,
+                           leads to export. Chart.js graphs (Regions bar chart, Niches
+                           doughnut). Recent buyers table. All users list.
+  user_dashboard.html    — User Dashboard — same layout but sirf logged-in user ke apne
+                           leads ke stats aur data
+
+Scraping & Export:
+  generate_leads.html    — Lead Generation page — keyword, country, max_leads input form.
+                           Real-time progress bar + live log window (AJAX polling)
+  export_history.html    — Export History — table showing all past CSV exports
+                           (user, date, total leads)
+
+Admin Management:
+  admin_users.html       — User Management — sab users ki list, block/unblock buttons,
+                           edit links
+  edit_user.html         — Edit User — admin kisi user ka username, email, password
+                           change kar sakta hai
+
+Settings:
+  settings.html          — User Settings — profile update (name, email, company).
+                           Message templates CRUD (add, edit, delete).
+                           Placeholders: {brand}, {niche}, {sender_name}, {company_name}
+
+
+================================================================================
+STATIC FILES
+================================================================================
+
+  File                        | Purpose
+  ----------------------------|----------------------------------------------
+  static/accuracy.png         | ML model accuracy comparison bar chart
+  static/accuracy_graph.png   | Feature importance graph (copy)
+  static/confusion_matrix.png | ML confusion matrix heatmap
+  static/roc_curve.png        | ROC curve with AUC score
+
+
+================================================================================
+DATA FILES
+================================================================================
+
+  File                    | Purpose                                    | Size
+  ------------------------|--------------------------------------------|--------
+  buyers_noisy_1000.xlsx  | Raw noisy buyer data (1000 records)        | 44 KB
+  clean_buyers.csv        | NLP.py se cleaned aur labeled data         | 138 KB
+  buyers_with_scores.csv  | ML.py se scored data (lead_score+category) | 138 KB
+  Predicted_Buyers.csv    | Final predicted buyers with all features   | 168 KB
+  buyer_model.pkl         | Trained Random Forest model (joblib)       | 1.97 MB
+  label_encoder.pkl       | Niche label encoder (joblib)               | 603 B
+  feature_importance.png  | Feature importance chart (ML.py generated) | 13 KB
+
+
+================================================================================
+LIBRARIES USED
+================================================================================
+
+  Library          | Version | Kyun Use Ki
+  -----------------|---------|----------------------------------------------
+  Flask            | 3.1.3   | Web server, routing, API endpoints
+  Flask-Login      | 0.6.3   | User session management (login/logout cookies, @login_required)
+  Werkzeug         | 3.1.8   | Password hashing (generate_password_hash / check_password_hash)
+  Selenium         | 4.41.0  | Chrome browser automation — page navigate, form fill, button click
+  webdriver-manager| 4.0.2   | Chrome driver automatically download (manual download nahi karna padta)
+  pandas           | latest  | Data manipulation — CSV/Excel read/write, DataFrame operations
+  numpy            | latest  | Numerical computations (ML ke saath use)
+  scikit-learn     | latest  | ML models — Random Forest, Decision Tree, Logistic Regression, metrics
+  beautifulsoup4   | latest  | HTML parsing (available but not actively used in current code)
+  Chart.js         | CDN     | Frontend — Dashboard par graphs (Bar chart, Doughnut chart)
+  sqlite3          | built-in| SQLite database connect aur SQL queries
+  oracledb         | —       | Oracle Database connection (NLP.py aur ML.py mein)
+
+
+================================================================================
+COMPLETE DATA FLOW
+================================================================================
+
+Step-by-step:
+
+  1. User login kar ke "Generate Leads" page par jata hai
+  2. Keyword (e.g. "fashion"), Country, Max Leads enter kar ke "Start" click karta hai
+  3. app.py background thread mein shopify_leads.py ka scrape() call karta hai
+  4. Selenium Chrome open karta hai (stealth mode) aur DuckDuckGo par search karta hai
+  5. Results se Shopify store links collect karta hai (5 queries x 5 pages)
+  6. Har store visit kar ke brand name, email, niche extract karta hai
+  7. Contact page dhundh kar form fill karta hai (user ke saved template se)
+  8. Submit button click karta hai
+  9. Lead ko database.db ke buyers table mein save karta hai
+  10. Real-time progress UI par dikhai deta hai (progress bar + logs)
+  11. Dashboard automatically updated data dikhata hai (charts + tables)
+
+Flow Diagram:
+
+  User clicks "Generate Leads"
+       |
+       v
+  app.py -> api_start_scraper()
+       |
+       v
+  shopify_leads.py -> scrape()
+       |
+       v
+  DuckDuckGo Search (5 queries x 5 pages)
+       |
+       v
+  Shopify Stores (Visit each store)
+       |
+       v
+  Extract brand, email, niche
+       |
+       v
+  Find Contact Page -> Fill form & Submit
+       |
+       v
+  Save to database.db
+       |
+       v
+  Dashboard (Charts & Tables)
+
+
+================================================================================
+LOGIN CREDENTIALS (DEFAULT)
+================================================================================
+
+  Role  | Username | Password
+  ------|----------|---------
+  Admin | admin    | admin123
+  User  | user     | user123
+
+WARNING: Yeh default credentials hain. Production mein in ko zaroor change karein
+aur app.secret_key bhi update karein.
+
+================================================================================

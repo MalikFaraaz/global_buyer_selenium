@@ -1,0 +1,396 @@
+{% extends "base.html" %}
+
+{% block extra_css %}
+<style>
+    .dashboard-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+    }
+
+    .dashboard-header h1 {
+        color: var(--dark-blue);
+        font-size: 1.8rem;
+    }
+
+    /* Cards */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+
+    .stat-card {
+        background: var(--white);
+        padding: 25px;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        transition: transform 0.2s;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-3px);
+    }
+
+    .stat-icon {
+        width: 55px;
+        height: 55px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+    }
+
+    .stat-info {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .stat-info h3 {
+        font-size: 0.9rem;
+        color: var(--text-gray);
+        margin-bottom: 5px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .stat-info p {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: var(--dark-blue);
+    }
+
+    /* Charts */
+    .charts-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 25px;
+        margin-bottom: 30px;
+    }
+
+    .chart-card {
+        background: var(--white);
+        padding: 25px;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    }
+
+    .chart-card h3 {
+        margin-bottom: 20px;
+        color: var(--dark-blue);
+        font-size: 1.2rem;
+    }
+
+    /* Table Styles */
+    .table-card {
+        background: var(--white);
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        padding: 25px;
+        margin-top: 20px;
+    }
+
+    .table-card h3 {
+        margin-bottom: 20px;
+        color: var(--dark-blue);
+        font-size: 1.2rem;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    th,
+    td {
+        padding: 15px;
+        text-align: left;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    th {
+        background-color: var(--light-blue);
+        color: var(--text-dark);
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        letter-spacing: 0.5px;
+    }
+
+    tr:last-child td {
+        border-bottom: none;
+    }
+
+    tr:hover td {
+        background-color: #f8fafc;
+    }
+
+    .badge {
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        display: inline-block;
+    }
+
+    .badge-verified {
+        background-color: #e8f5e9;
+        color: #2e7d32;
+    }
+
+    .badge-pending {
+        background-color: #fff3e0;
+        color: #ef6c00;
+    }
+
+    .badge-error {
+        background-color: #ffebee;
+        color: #c62828;
+    }
+
+    .badge-shopify {
+        background: #ecfdf5;
+        color: #059669;
+        border: 1px solid #a7f3d0;
+    }
+
+    .badge-wordpress {
+        background: #eff6ff;
+        color: #2563eb;
+        border: 1px solid #bfdbfe;
+    }
+
+    .badge-wix {
+        background: #faf5ff;
+        color: #9333ea;
+        border: 1px solid #e9d5ff;
+    }
+
+    .badge-squarespace {
+        background: #fff1f2;
+        color: #e11d48;
+        border: 1px solid #fecdd3;
+    }
+
+    .badge-bigcommerce {
+        background: #fff7ed;
+        color: #ea580c;
+        border: 1px solid #fed7aa;
+    }
+
+    .badge-custom {
+        background: #f8fafc;
+        color: #475569;
+        border: 1px solid #cbd5e1;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h1>Welcome, {{ current_user.username | capitalize }}</h1>
+</div>
+
+<!-- ====== METRICS CARDS ====== -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon" style="background: #e3f2fd; color: #1976d2;">📊</div>
+        <div class="stat-info">
+            <h3>My Total Leads</h3>
+            <p>{{ total_leads }}</p>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon" style="background: #e8f5e9; color: #388e3c;">📈</div>
+        <div class="stat-info">
+            <h3>New Today</h3>
+            <p>{{ new_leads_today }}</p>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon" style="background: #fff3e0; color: #f57c00;">⭐</div>
+        <div class="stat-info">
+            <h3>Verified</h3>
+            <p>{{ verified_buyers }}</p>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon" style="background: #f3e5f5; color: #7b1fa2;">📥</div>
+        <div class="stat-info">
+            <h3>Ready Export</h3>
+            <p>{{ leads_to_export }}</p>
+        </div>
+    </div>
+</div>
+
+<!-- ====== CHARTS ====== -->
+<div class="charts-grid">
+    <div class="chart-card">
+        <h3>Leads by Region</h3>
+        <canvas id="barChart" height="200"></canvas>
+    </div>
+    <div class="chart-card">
+        <h3>Top Niches Searched</h3>
+        <div style="height: 250px; display: flex; justify-content: center;">
+            <canvas id="doughnutChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- ====== RECENT LEADS TABLE ====== -->
+<div class="table-card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h3>My Recent Leads</h3>
+        <span
+            style="font-size: 0.85rem; color: var(--text-gray); background: var(--light-blue); padding: 4px 10px; border-radius: 20px;">Top
+            100 entries</span>
+    </div>
+
+    <div style="max-height: 400px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 8px;">
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead
+                style="position: sticky; top: 0; background-color: var(--light-blue); z-index: 10; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                <tr>
+                    <th>Brand / Website</th>
+                    <th>Platform</th>
+                    <th>Location</th>
+                    <th>Niche</th>
+                    <th>Email</th>
+                    <th>Category</th>
+                    <th>Scrape Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for b in buyers %}
+                <tr>
+                    <td style="font-weight: 600; color: var(--primary-blue);">
+                        <div>{{ b[0] }}</div>
+                        {% if b[9] %}
+                        <a href="{{ b[9] }}" target="_blank" style="font-size: 0.75rem; color: var(--accent-blue); text-decoration: none;">🔗 {{ b[9] }}</a>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% set plat = b[8] | lower if b[8] else 'custom' %}
+                        {% if 'shopify' in plat %}
+                        <span class="badge badge-shopify">🟢 Shopify</span>
+                        {% elif 'word' in plat or 'woo' in plat %}
+                        <span class="badge badge-wordpress">🔵 WordPress</span>
+                        {% elif 'wix' in plat %}
+                        <span class="badge badge-wix">🟣 Wix</span>
+                        {% elif 'square' in plat %}
+                        <span class="badge badge-squarespace">🔴 Squarespace</span>
+                        {% elif 'big' in plat %}
+                        <span class="badge badge-bigcommerce">🟠 BigCommerce</span>
+                        {% else %}
+                        <span class="badge badge-custom">⚪ {{ b[8] or 'Custom' }}</span>
+                        {% endif %}
+                    </td>
+                    <td style="font-size: 0.85rem;">
+                        <strong>{{ b[6] or 'Global' }}</strong>
+                        {% if b[7] %}
+                        <div style="color: var(--text-gray); font-size: 0.8rem;">📍 {{ b[7] }}</div>
+                        {% endif %}
+                        {% if b[11] %}
+                        <div style="color: #475569; font-size: 0.75rem; margin-top: 2px;" title="{{ b[11] }}">🏢 {{ b[11][:35] }}{% if b[11]|length > 35 %}...{% endif %}</div>
+                        {% endif %}
+                    </td>
+                    <td>{{ b[1]|upper if b[1] else 'UNKNOWN' }}</td>
+                    <td style="font-size: 0.85rem;">
+                        <div>{{ b[2] if b[2] else '—' }}</div>
+                        {% if b[10] %}
+                        <div style="color: #059669; font-size: 0.75rem; font-weight: 500; margin-top: 2px;">📞 {{ b[10] }}</div>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if b[3] == 'High' %}
+                        <span class="badge badge-verified">✓ HIGH</span>
+                        {% elif b[3] == 'Medium' %}
+                        <span class="badge badge-pending">MEDIUM</span>
+                        {% else %}
+                        <span class="badge badge-error">LOW</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if b[5] == 'submitted' %}
+                        <span class="badge badge-verified">✓ Sent</span>
+                        {% elif b[5] == 'submit_failed' %}
+                        <span class="badge badge-pending">Form Filled</span>
+                        {% elif b[5] == 'form_not_filled' %}
+                        <span class="badge badge-error">Not Filled</span>
+                        {% else %}
+                        <span class="badge badge-error">{{ b[5]|capitalize }}</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="7" style="text-align: center; padding: 20px; color: #777;">No recent leads found. Start
+                        scraping!</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script type="application/json" id="user-regions-data">{{ regions|tojson }}</script>
+<script type="application/json" id="user-categories-data">{{ top_categories|tojson }}</script>
+<script>
+    const regionsData = JSON.parse(document.getElementById('user-regions-data').textContent || '{}');
+    const categoriesData = JSON.parse(document.getElementById('user-categories-data').textContent || '{}');
+
+    // Leads by Region Chart
+    const barCtx = document.getElementById('barChart').getContext('2d');
+    new Chart(barCtx, {
+        type: 'bar',
+        data: {
+            labels: Object.keys(regionsData),
+            datasets: [{
+                label: 'Leads per Region',
+                data: Object.values(regionsData),
+                backgroundColor: 'rgba(42, 122, 204, 0.8)',
+                borderRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { beginAtZero: true, grid: { color: '#f0f0f0' } },
+                x: { grid: { display: false } }
+            }
+        }
+    });
+
+    // Top Niches Chart
+    const doughnutCtx = document.getElementById('doughnutChart').getContext('2d');
+    new Chart(doughnutCtx, {
+        type: 'doughnut',
+        data: {
+            labels: Object.keys(categoriesData),
+            datasets: [{
+                data: Object.values(categoriesData),
+                backgroundColor: ['#2a7acc', '#1e88e5', '#42a5f5', '#64b5f6', '#90caf9'],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'right', labels: { boxWidth: 12, font: { family: 'Inter', size: 11 } } }
+            },
+            cutout: '70%'
+        }
+    });
+</script>
+{% endblock %}
