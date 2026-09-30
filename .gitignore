@@ -27,3 +27,8 @@ ehthumbs.db
 Desktop.ini
 $RECYCLE.BIN/
 .DS_Store
+
+# PyInstaller & Executables
+build/
+dist/
+*.spec

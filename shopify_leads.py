@@ -402,8 +402,23 @@ def create_driver(headless=False, proxy_url=None):
 
     return driver
 
+def get_db_path():
+    if getattr(sys, 'frozen', False):
+        base_dir = os.path.dirname(sys.executable)
+        db_path = os.path.join(base_dir, 'database.db')
+        if not os.path.exists(db_path):
+            bundled_db = os.path.join(getattr(sys, '_MEIPASS', ''), 'database.db')
+            if os.path.exists(bundled_db):
+                import shutil
+                try:
+                    shutil.copy2(bundled_db, db_path)
+                except:
+                    pass
+        return db_path
+    return os.path.join(os.path.dirname(os.path.abspath(__file__)), 'database.db')
+
 def create_db_connection():
-    conn = sqlite3.connect('database.db', timeout=60.0, check_same_thread=False)
+    conn = sqlite3.connect(get_db_path(), timeout=60.0, check_same_thread=False)
     try:
         conn.execute("PRAGMA journal_mode=WAL;")
     except:

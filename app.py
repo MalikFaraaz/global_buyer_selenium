@@ -17,10 +17,34 @@ import io
 import csv
 import re
 
+import os
+import sys
+
 from shopify_leads import scrape, SCRAPER_STATUS, patch_winapi_for_default_desktop, stop_scraper_for_user
 patch_winapi_for_default_desktop()
 
-app = Flask(__name__)
+def get_db_path():
+    if getattr(sys, 'frozen', False):
+        base_dir = os.path.dirname(sys.executable)
+        db_path = os.path.join(base_dir, 'database.db')
+        if not os.path.exists(db_path):
+            bundled_db = os.path.join(getattr(sys, '_MEIPASS', ''), 'database.db')
+            if os.path.exists(bundled_db):
+                import shutil
+                try:
+                    shutil.copy2(bundled_db, db_path)
+                except:
+                    pass
+        return db_path
+    return os.path.join(os.path.dirname(os.path.abspath(__file__)), 'database.db')
+
+if getattr(sys, 'frozen', False):
+    template_folder = os.path.join(sys._MEIPASS, 'templates')
+    static_folder = os.path.join(sys._MEIPASS, 'static')
+    app = Flask(__name__, template_folder=template_folder, static_folder=static_folder)
+else:
+    app = Flask(__name__)
+
 app.secret_key = 'super_secret_key_change_in_production' 
 
 # Setup Flask-Login
@@ -29,7 +53,7 @@ login_manager.login_view = 'login'
 login_manager.init_app(app)
 
 def get_db_connection():
-    return sqlite3.connect('database.db')
+    return sqlite3.connect(get_db_path())
 
 class User(UserMixin):
     def __init__(self, id, username, role, is_blocked, show_browser=1):
@@ -636,4 +660,19 @@ def edit_template(template_id):
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    if getattr(sys, 'frozen', False):
+        import webbrowser
+        def open_browser():
+            import time
+            time.sleep(1.5)
+            webbrowser.open("http://127.0.0.1:5000")
+        threading.Thread(target=open_browser, daemon=True).start()
+        print("\n" + "="*60)
+        print("  Global Buyer Selenium Lead Generator Started!")
+        print("  Access Dashboard: http://127.0.0.1:5000")
+        print("  (Opening default web browser automatically...)")
+        print("  Press CTRL+C in this console to exit.")
+        print("="*60 + "\n")
+        app.run(host="127.0.0.1", port=5000, debug=False)
+    else:
+        app.run(debug=True)
